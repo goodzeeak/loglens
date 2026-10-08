@@ -46,6 +46,22 @@ public sealed class DesktopTests
                     collector.Hardware = true; vm.ScanCommand.Execute(null); await UntilIdle(vm);
                     Assert.Equal("Fatal processor cache error", vm.Selected?.Title);
                     Capture(window, "processor-detail-dark", 1280, 840);
+                    var historyPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".json");
+                    var investigation = new InvestigationWindow(vm.Selected, new(historyPath));
+                    investigation.Measure(new(1080, 820)); investigation.Arrange(new(0, 0, 1080, 820)); investigation.UpdateLayout();
+                    var investigationVm = (InvestigationViewModel)investigation.DataContext;
+                    Assert.Equal("cpu-stock", investigationVm.Plan.StepId);
+                    investigationVm.Notes = "Synthetic fixture notes"; investigationVm.Outcome = "Issue recurred";
+                    investigationVm.SaveCommand.Execute(null);
+                    Assert.Single(new InvestigationStore(historyPath).Load()); Assert.Equal("firmware", investigationVm.Plan.StepId);
+                    Capture(investigation, "investigation-dark", 1080, 760);
+                    var options = new ExportOptionsWindow(new InvestigationStore(historyPath).Load());
+                    options.Measure(new(760, 620)); options.Arrange(new(0, 0, 760, 620)); options.UpdateLayout();
+                    Assert.False(options.Selection.IncludeHistory); Assert.False(options.Selection.IncludeReviewedNotes);
+                    Capture(options, "export-options-dark", 760, 580);
+                    var feedback = new ExportOptionsWindow([], true);
+                    feedback.Measure(new(760, 620)); feedback.Arrange(new(0, 0, 760, 620)); feedback.UpdateLayout();
+                    Capture(feedback, "feedback-dark", 760, 580);
                     vm.CopyCommand.Execute(null); Assert.Contains("Confirmed observation", actions.Copied);
                     vm.PreviewCommand.Execute(null); await UntilIdle(vm);
                     Assert.NotNull(actions.Report);
@@ -57,6 +73,9 @@ public sealed class DesktopTests
                     Assert.Same(application.Resources["CanvasBrush"], window.Background);
                     Capture(window, "dashboard-light", 1280, 840);
                     Capture(window, "dashboard-small", 960, 660);
+                    Capture(investigation, "investigation-light", 1080, 760);
+                    Capture(investigation, "investigation-small", 800, 540);
+                    investigation.Close(); options.Close(); feedback.Close(); File.Delete(historyPath);
                     var artifactDirectory = Environment.GetEnvironmentVariable("LOGLENS_TEST_ARTIFACTS");
                     if (!string.IsNullOrEmpty(artifactDirectory))
                     {

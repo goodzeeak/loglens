@@ -1,47 +1,47 @@
-# Validation and release readiness
+# Validation and beta readiness
 
-Date: 8 October 2026. Status: **MVP release candidate; not production-ready pending the remaining manual matrix and owner release approval.**
+8 October 2026. **v0.1.0 Public Beta preparation; not production-certified.** Public release/tag creation remains owner-authorized only.
 
-## Executed locally
+## Independently verified baseline and current checks
 
-Environment: Windows 11 x64, OS build 26200. Workspace-local .NET SDK 10.0.401, desktop/runtime 10.0.12. No pre-existing SDK was available. NuGet restores use nuget.org. Product collection is read-only and never intentionally crashes the machine.
+The starting commit was 1f6c72afa0f3d303980ffe4b4c8ed0fddea4bce2. Its 98 tests and 36 diagnostic fixtures passed again before changes. GitHub tags/releases were empty before implementation and again before packaging. Version remains 0.1.0 in project and UI metadata. The github-release environment still requires owner review.
 
 | Check | Result |
 | --- | --- |
-| Predetermined diagnostic accuracy fixtures | **36 passed, 0 failed** |
-| Complete xUnit suite | **98 passed, 0 failed, 0 skipped** |
-| Release build with .NET and xUnit analyzers; warnings treated as errors | Passed, zero warnings/errors |
-| Native EventLogReader integration, previous 24 hours | Passed on the local Windows host |
-| WPF STA workflow regression | Passed: initial state, scan, search/filter, copy, preview, light/dark brushes, cancellation preserving prior result |
-| NuGet vulnerability audit, including transitive packages | No known vulnerable packages reported by configured sources |
-| Self-contained win-x64 publish | Passed |
-| Interactive real seven-day scan | Passed; led to the NTFS correction described below |
-| Synthetic HTML report opened in a browser | Passed; evidence, uncertainty, recommendations and privacy notice rendered correctly |
-| Dark/light main-window, small-window and report-preview layout | Inspected using synthetic WPF renders; dark native title bar and matched controls also visually verified in the updated running Windows 11 build |
-| 10,000-incident processing limit | Passed; approximately 1.8 seconds locally in the initial stress run (not a hardware-independent guarantee) |
-| GitHub Windows CI on initial implementation | Passed: [run 37725500356](https://github.com/goodzeeak/loglens/actions/runs/37725500356); later refinement requires a new run |
+| Mandatory semantic fixtures | **56 passed, 0 failed** (36 preserved + 20 new) |
+| Complete xUnit suite | **137 passed, 0 failed, 0 skipped** |
+| Release build and enabled .NET/xUnit analyzers, warnings as errors | Passed |
+| Native read-only EventLogReader integration | Passed locally on Windows 11 x64 build 26200; System/Application/DHCP Admin paths exercised |
+| WPF STA workflow | Passed: scan/search/filter/copy/preview/themes/cancellation; investigation save and next-step transition; export/feedback window construction |
+| History | Persist/reload/edit/delete/clear, non-recurrence/inconclusive/skipped handling, exact incident scope, corrupt data preservation tested |
+| Reports / feedback | Notes omitted by default, opt-in redaction, HTML injection prevention, arbitrary field/DNS-name minimization tested |
+| Icon | Nine embedded ICO frame dimensions tested; WPF assembly-qualified resource path corrected after regression caught test-host startup failure |
+| Synthetic visual QA | Main dashboard, dark/light investigation, small-window layouts, export options and feedback renders inspected |
+| NuGet vulnerability audit including transitive packages | No known vulnerable packages reported by configured source on this date |
+| Native desktop smoke test | Portable launch, embedded icon, dark title bar, real seven-day scan and service-specific guided window verified on Windows 11 |
+| Self-contained publish / ZIP / CI | Run by scripts/package.ps1; final run links and exact deliverable checksum recorded in the delivery report |
 
-## Accuracy findings and corrections
+Native visual testing caught doubled padding in the custom TextBox template that clipped the 40-pixel date input. The redundant content-host margin was removed; standard TextBox padding remains.
 
-Before UI implementation, 24 fixtures and six additional engine checks passed. During real desktop testing, healthy informational NTFS 98 records were incorrectly classified as storage incidents. The rule was corrected to require a warning/error/critical level and a valid nonzero structured CorruptionActionState. Four negative/positive regression fixtures cover healthy, unknown and actionable states, including restart context. The entire suite passed after the correction.
+The local SDK is .NET 10.0.401 with runtime 10.0.12. New provider meanings and channel mappings were inspected from Microsoft-shipped provider metadata. No real diagnostic payloads were committed. CI test output does not include private event fields.
 
-A visual check also found WPF's implicit Window style was not applied to the derived windows. Explicit style references corrected dark/light backgrounds and inherited text colors. The STA regression now asserts both main-window and report-preview theme brushes.
+Every mandatory fixture asserts expected category, complete confirmed-finding codes, permitted hypothesis codes, recommendations and correlation counts; it checks prohibited causal conclusions and deterministic repeated/reversed input. General performance diagnosis is unsupported, not inferred from passing tests.
 
-User desktop feedback prompted native title-bar dark/light styling, matched 40-pixel input/dropdown heights and themed dropdown templates. It also exposed the need for specific hardware explanations. A bounded CPER decoder now reads documented severity and generic-processor fields, so supported records can identify a fatal processor cache error and validated processor ID rather than only showing a hardware warning. The additional tests and eight accuracy fixtures validate these details and negative cases. No personal raw diagnostic payload has been committed or uploaded.
+## Accuracy corrections retained
 
-Fixture contracts explicitly define category, confirmed observation codes, permitted hypotheses, expected recommendations, evidence/context counts and prohibited causal conclusions. Every fixture is checked across repeated execution and reversed input order. Additional tests cover wrong provider/channel IDs, time bounds, collection access/missing/corrupt conditions, oversized XML, DTD rejection, record limits, cancellation, privacy minimization and HTML encoding.
+The original NTFS 98 false-positive fix, CPER validity/bounds checks and ambiguous report-ID rules remain covered. Broad fixtures include successful updates ignored, wrong-provider/channel IDs, missing service identity, duplicate events, malformed optional metadata and unrelated network/service events near a restart. Record timestamps now participate in persistent incident identity so reused event numbers after log clearing do not inherit history.
 
-## Remaining manual release checks
+## Remaining manual matrix
 
-- Windows 10 x64 on a qualifying edition/build, and a second clean Windows 11 machine without a developer SDK.
-- Explicit standard-user account scan and optional UAC elevation/cancel flow. No UAC/security prompt is automatically accepted by test automation.
-- Keyboard-only and screen-reader experience, Windows high contrast, 125/150/200% DPI, small displays and multiple monitors.
-- Long-running storage-heavy history, mid-read native cancellation and restricted/corrupt real log environments. Synthetic faults are already covered.
-- Offline clean-machine extraction and export, locale matrix, externally cleared logs, two rapid real restarts and delayed WER behavior.
-- Owner review of evidence language, executable provenance/SmartScreen experience and release authorization.
+- Windows 10 x64 on a qualifying edition/build; second clean Windows 11 host without an SDK.
+- Standard-user account and optional UAC consent/cancel flow; automation never accepts security prompts.
+- Keyboard-only complete workflow, screen reader, high contrast, 125/150/200% DPI and multiple monitors.
+- Actual failures from every new provider/category, alternate schemas/locales, delayed WER and close real restarts; no destructive failure injection is required or performed.
+- Clean offline extraction, OS Save dialog/export interaction, SmartScreen provenance review, restricted/corrupt real channels and mid-native-read cancellation.
+- Owner review of diagnostic language and authorization to publish.
 
-## Unresolved diagnostic limitations
+A successful build, synthetic UI render or positive test count does not establish these unperformed checks. Consult COVERAGE.md for the implemented/tested, limited and unsupported distinctions. Local handoff records any additional interactive checks performed after this document was prepared.
 
-Passing synthetic tests does not establish diagnostic reliability across all Windows devices. Restart grouping uses record-time heuristics and cannot always separate adjacent restarts or match delayed bug-check reports. Missing/contradictory application metadata may remain separate or unidentified. WHEA decoding is limited to validated CPER headers, section types and generic-processor fields; vendor-specific machine-check registers and dumps are not decoded. Unknown vendor-specific events are excluded. No event group proves a hardware component is defective or that a nearby event caused a restart. Reports minimize and redact common identifiers without promising perfect anonymity.
+## Diagnostic limitations
 
-See DIAGNOSTICS.md for the exact supported identities and bounds. CI outcomes, interactive export checks and package checksum are recorded separately in the handoff once completed; this document must not imply unexecuted checks have passed.
+Restart correlation is heuristic. Current logs cannot prove every freeze, physical component failure or internet outage. Optional app/service/update/device fields can be missing. Selected update/boot detection is not comprehensive servicing or recovery analysis. General performance measurement, crash dumps and vendor MCA interpretation remain unsupported. Similar incidents do not share history automatically; if evidence grouping changes at a scan boundary, the prior entry remains available in All history. Redaction is conservative but cannot promise anonymity.

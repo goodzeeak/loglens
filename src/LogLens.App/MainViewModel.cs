@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.IO;
+using System.Text.Json;
 using LogLens.Core;
 
 namespace LogLens.App;
@@ -14,6 +16,9 @@ public interface IDesktopActions
     void OpenEventViewer();
     void ReopenElevated();
     void OpenLink(string name);
+    void Investigate(Incident? incident) { }
+    ReportSelection? SelectReportOptions(IReadOnlyList<InvestigationEntry> history) => new(false, false);
+    string? RequestFeedback() => null;
 }
 public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
 {
@@ -26,9 +31,12 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     private Incident? selected;
     private string search = "", category = "All incidents", status = "Ready when you are. Your diagnostic data stays on this PC.", theme;
     private int days;
-    public MainViewModel(ScanService scanner, IDesktopActions desktop, AppSettings settings)
+    private int viewDays = 30;
+    private readonly InvestigationStore historyStore;
+    public MainViewModel(ScanService scanner, IDesktopActions desktop, AppSettings settings, InvestigationStore? historyStore = null)
     {
         this.scanner = scanner; this.desktop = desktop; days = settings.Days; theme = settings.Theme;
+        this.historyStore = historyStore ?? new(InvestigationViewModel.DefaultPath);
         ScanCommand = new(ScanAsync, Error, () => !IsBusy);
         CancelCommand = new(() => { cancellation?.Cancel(); Status = "Cancelling…"; }, () => IsBusy && cancellation != null);
         PreviewCommand = new(PreviewAsync, Error, () => result != null && !IsBusy);
@@ -44,13 +52,25 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
         RepositoryCommand = new(() => TryAction(() => desktop.OpenLink("repository")));
         IssuesCommand = new(() => TryAction(() => desktop.OpenLink("issues")));
         PrivacyCommand = new(() => TryAction(() => desktop.OpenLink("privacy")));
+        InvestigateCommand = new(() => TryAction(() => desktop.Investigate(Selected)), () => Selected != null && !IsBusy);
+        HistoryCommand = new(() => TryAction(() => desktop.Investigate(null)), () => !IsBusy);
+        FeedbackCommand = new(() => TryAction(() =>
+        {
+            if (Selected == null || result == null) return;
+            var expected = desktop.RequestFeedback();
+            if (expected != null) desktop.Preview(reportBuilder.Feedback(result, Selected, Version, RuntimeInformation.OSDescription, expected));
+        }), () => Selected != null && !IsBusy);
     }
     public const string Version = "0.1.0";
     public event PropertyChangedEventHandler? PropertyChanged;
     public ObservableCollection<Incident> Incidents { get; } = [];
     public int[] Durations { get; } = [1, 7, 30];
     public string[] Themes { get; } = ["Dark", "Light"];
-    public string[] Categories { get; } = ["All incidents", "Unexpected restart", "Application failure", "Hardware", "Storage", "Display"];
+    public string[] Categories { get; } = ["All incidents", "Unexpected restart", "Application failure", "Hardware", "Storage", "Display", "Device driver", "Network", "Service", "Windows Update", "Boot"];
+    public int ViewDays { get => viewDays; set { if (value is not (1 or 7 or 30)) return; viewDays = value; Notify(); Filter(); } }
+    public RelayCommand InvestigateCommand { get; }
+    public RelayCommand HistoryCommand { get; }
+    public RelayCommand FeedbackCommand { get; }
     public AsyncCommand ScanCommand { get; }
     public AsyncCommand PreviewCommand { get; }
     public RelayCommand CancelCommand { get; }
@@ -68,7 +88,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public string Search { get => search; set { search = value; Notify(); Filter(); } }
     public string Category { get => category; set { category = value; Notify(); Filter(); } }
     public string Status { get => status; private set { status = value; Notify(); } }
-    public Incident? Selected { get => selected; set { selected = value; Notify(); Notify(nameof(HasSelection)); CopyCommand?.Refresh(); } }
+    public Incident? Selected { get => selected; set { selected = value; Notify(); Notify(nameof(HasSelection)); CopyCommand?.Refresh(); InvestigateCommand?.Refresh(); FeedbackCommand?.Refresh(); } }
     public bool HasSelection => Selected != null;
     public bool HasAccessDenied => result?.Issues.Any(i => i.Code == "access-denied") == true;
     public string IncidentCount => result?.Incidents.Count.ToString("N0") ?? "—";
@@ -96,10 +116,17 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         if (result == null) return;
         var snapshot = result;
+        InvestigationEntry[] history;
+        try { history = historyStore.Load().Where(h => snapshot.Incidents.Any(i => i.Id == h.IncidentId && i.Category == h.Category)).ToArray(); }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        { Status = "History could not be read. Open Local history to review the problem; a report without history is still available."; history = []; }
+        var selection = desktop.SelectReportOptions(history);
+        if (selection == null) return;
         IsBusy = true; Status = "Preparing a minimized, redacted report…";
         try
         {
-            var report = await Task.Run(() => reportBuilder.Build(snapshot, Version, RuntimeInformation.OSDescription, DateTimeOffset.Now));
+            var report = await Task.Run(() => reportBuilder.Build(snapshot, Version, RuntimeInformation.OSDescription, DateTimeOffset.Now,
+                selection.IncludeHistory ? history : null, selection.IncludeReviewedNotes));
             desktop.Preview(report); Status = "Report preview closed. No report is uploaded by LogLens.";
         }
         finally { IsBusy = false; }
@@ -108,11 +135,11 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         var oldId = Selected?.Id; Incidents.Clear();
         if (result != null)
-            foreach (var incident in result.Incidents.Where(i => (Category == "All incidents" || i.CategoryLabel == Category) &&
+            foreach (var incident in result.Incidents.Where(i => i.Time >= result.Period.End.AddDays(-ViewDays) && (Category == "All incidents" || i.CategoryLabel == Category) &&
                 (Search.Length == 0 || i.Title.Contains(Search, StringComparison.OrdinalIgnoreCase) || i.Explanation.Contains(Search, StringComparison.OrdinalIgnoreCase) || i.Evidence.Any(e => e.Provider.Contains(Search, StringComparison.OrdinalIgnoreCase) || e.EventId.ToString().Contains(Search, StringComparison.OrdinalIgnoreCase))))) Incidents.Add(incident);
         Selected = Incidents.FirstOrDefault(i => i.Id == oldId) ?? Incidents.FirstOrDefault(); Notify(nameof(EmptyMessage));
     }
-    private void RefreshCommands() { ScanCommand.Refresh(); PreviewCommand.Refresh(); CancelCommand.Refresh(); CopyCommand.Refresh(); ElevateCommand.Refresh(); }
+    private void RefreshCommands() { ScanCommand.Refresh(); PreviewCommand.Refresh(); CancelCommand.Refresh(); CopyCommand.Refresh(); ElevateCommand.Refresh(); InvestigateCommand.Refresh(); HistoryCommand.Refresh(); FeedbackCommand.Refresh(); }
     private void SaveSettings() { if (!new AppSettings(Days, Theme).Save()) Status = "Settings apply for this session, but Windows could not save them."; }
     private void TryAction(Action action) { try { action(); } catch (Exception ex) { Error(ex); } }
     private void Error(Exception _) => Status = "LogLens could not complete that action. Check file permissions or Windows access, then try again. No system settings were changed.";

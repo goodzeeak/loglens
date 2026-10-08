@@ -1,0 +1,29 @@
+<Window x:Class="LogLens.App.InvestigationWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="LogLens — Guided investigation" Style="{StaticResource {x:Type Window}}" Width="1080" Height="820" MinWidth="800" MinHeight="600" WindowStartupLocation="CenterOwner">
+  <Grid Margin="24">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <StackPanel Margin="0,0,0,18"><TextBlock Text="GUIDED INVESTIGATION · LOCAL HISTORY" Style="{StaticResource Muted}" FontSize="11"/><TextBlock Text="{Binding Title}" FontSize="24" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
+    <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,0,12,0">
+        <TextBlock Text="What we know" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding Known}" Margin="0,0,0,18"/>
+        <TextBlock Text="What we don't know" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding Unknowns}" Margin="0,0,0,18"/>
+        <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Your next step" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding Plan.Action}" FontSize="16" FontWeight="SemiBold"/></StackPanel></Border>
+        <TextBlock Text="Why this helps" Style="{StaticResource SectionTitle}" Margin="0,20,0,10"/><TextBlock Text="{Binding Plan.Why}"/>
+        <TextBlock Text="Safety considerations" Style="{StaticResource SectionTitle}" Margin="0,20,0,10"/><TextBlock Text="{Binding Plan.Safety}"/>
+        <TextBlock Text="What outcomes mean" Style="{StaticResource SectionTitle}" Margin="0,20,0,10"/><TextBlock Text="{Binding Plan.Outcomes}"/>
+        <TextBlock Text="What to do afterward" Style="{StaticResource SectionTitle}" Margin="0,20,0,10"/><TextBlock Text="{Binding Plan.FollowUp}"/>
+      </StackPanel></ScrollViewer>
+      <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,0,10,0">
+        <TextBlock Text="Investigation history" Style="{StaticResource SectionTitle}"/>
+        <CheckBox Content="Show history for all incidents" IsChecked="{Binding ShowAll}" Margin="0,0,0,12"/>
+        <ListBox ItemsSource="{Binding History}" SelectedItem="{Binding Selected}" Height="180" AutomationProperties.Name="Previous investigation steps"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Summary}" FontSize="12"/></DataTemplate></ListBox.ItemTemplate></ListBox>
+        <WrapPanel Margin="0,8,0,18"><Button Content="New outcome" Command="{Binding NewCommand}" Margin="0,0,8,8"/><Button Content="Delete selected" Command="{Binding DeleteCommand}" Margin="0,0,8,8"/><Button Content="Clear all history…" Command="{Binding ClearCommand}" Margin="0,0,0,8"/></WrapPanel>
+        <TextBlock Text="{Binding EditorTitle}" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding EditingStep}" Margin="0,0,0,14"/>
+        <TextBlock Text="Date performed · local time (yyyy-MM-dd HH:mm)" Style="{StaticResource Muted}" Margin="0,0,0,5"/><TextBox Height="40" Text="{Binding PerformedDate, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Date performed in local time" Margin="0,0,0,12"/>
+        <TextBlock Text="Outcome" Style="{StaticResource Muted}" Margin="0,0,0,5"/><ComboBox ItemsSource="{Binding Outcomes}" SelectedItem="{Binding Outcome}" AutomationProperties.Name="Investigation outcome" Margin="0,0,0,12"/>
+        <TextBlock Text="Optional private notes · 2,000 characters maximum" Style="{StaticResource Muted}" Margin="0,0,0,5"/><TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" VerticalContentAlignment="Top" TextWrapping="Wrap" Height="100" VerticalScrollBarVisibility="Auto" MaxLength="2000" AutomationProperties.Name="Optional investigation notes"/>
+        <Button Content="Save outcome" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,16,0,0"/>
+      </StackPanel></ScrollViewer>
+    </Grid>
+    <TextBlock Grid.Row="2" Text="{Binding Status}" Style="{StaticResource Muted}" Margin="0,18,0,0" AutomationProperties.LiveSetting="Polite"/>
+  </Grid>
+</Window>

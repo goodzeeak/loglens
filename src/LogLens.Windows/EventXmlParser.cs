@@ -17,7 +17,7 @@ public static class EventXmlParser
         XNamespace ns = "http://schemas.microsoft.com/win/2004/08/events/event";
         var system = root.Element(ns + "System") ?? throw new XmlException("Missing System.");
         var channel = Required(system.Element(ns + "Channel")?.Value);
-        if (channel is not ("System" or "Application")) throw new XmlException("Unsupported channel.");
+        if (!WindowsEventCollector.Channels.Contains(channel)) throw new XmlException("Unsupported channel.");
         var provider = Required(system.Element(ns + "Provider")?.Attribute("Name")?.Value);
         if (!int.TryParse(system.Element(ns + "EventID")?.Value, out var id)) throw new XmlException("Invalid event ID.");
         var timeText = system.Element(ns + "TimeCreated")?.Attribute("SystemTime")?.Value;

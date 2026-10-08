@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-labelledby="title">
+  <title id="title">LogLens — a lens revealing diagnostic log entries</title>
+  <rect x="8" y="8" width="240" height="240" rx="52" fill="#101d30"/>
+  <path d="M158 155L211 208" fill="none" stroke="#83e6cc" stroke-width="24" stroke-linecap="round"/>
+  <circle cx="111" cy="108" r="65" fill="#101d30" stroke="#f0f5fc" stroke-width="12"/>
+  <path d="M78 86H132M78 108H144M78 130H118" fill="none" stroke="#83e6cc" stroke-width="9" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,31 @@
+name: Inaccurate diagnostic finding
+description: Report an unsupported, misleading or missing conclusion
+title: "[Diagnosis] "
+body:
+  - type: markdown
+    attributes:
+      value: "Do not upload raw logs or dumps. Prepare diagnostic feedback in LogLens and review every field before sharing. Attachments are optional."
+  - type: input
+    id: version
+    attributes:
+      label: LogLens version and Windows version
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Category, rule IDs and actual finding
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected finding and supporting evidence
+      description: Explain what is misleading without exposing private values.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Reproduction or reviewed feedback
+      description: Optional minimized details. Never include raw crash dumps, credentials or unreviewed logs.

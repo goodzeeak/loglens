@@ -3,6 +3,8 @@
     <OutputType>WinExe</OutputType><TargetFramework>net10.0-windows</TargetFramework><UseWPF>true</UseWPF>
     <ApplicationManifest>app.manifest</ApplicationManifest><AssemblyName>LogLens</AssemblyName><Product>LogLens</Product>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <ApplicationIcon>Assets/LogLens.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup><ProjectReference Include="../LogLens.Core/LogLens.Core.csproj" /><ProjectReference Include="../LogLens.Windows/LogLens.Windows.csproj" /></ItemGroup>
+  <ItemGroup><Resource Include="Assets/LogLens.ico"/><Resource Include="Assets/LogLens.png"/></ItemGroup>
 </Project>

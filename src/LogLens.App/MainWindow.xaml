@@ -3,7 +3,7 @@
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
     <Grid>
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
-      <StackPanel><TextBlock Text="GOODWIN LABS  /  LOCAL DIAGNOSTICS" Style="{StaticResource Muted}" FontSize="11" FontWeight="SemiBold"/><TextBlock Text="LogLens" FontSize="34" FontWeight="SemiBold" Margin="0,4,0,0"/><TextBlock Text="{Binding Summary}" Style="{StaticResource Muted}" Margin="0,4,20,0"/></StackPanel>
+      <StackPanel><TextBlock Text="GOODWIN LABS  /  LOCAL DIAGNOSTICS" Style="{StaticResource Muted}" FontSize="11" FontWeight="SemiBold"/><StackPanel Orientation="Horizontal" Margin="0,4,0,0"><Image Source="/LogLens;component/Assets/LogLens.png" Width="42" Height="42" Margin="0,0,10,0" AutomationProperties.Name="LogLens logo"/><TextBlock Text="LogLens" FontSize="34" FontWeight="SemiBold"/></StackPanel><TextBlock Text="{Binding Summary}" Style="{StaticResource Muted}" Margin="0,4,20,0"/></StackPanel>
       <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
         <Button Content="Preview / export report" Command="{Binding PreviewCommand}" Margin="0,0,12,0" ToolTip="Preview the full scan report with redaction before saving HTML"/>
         <Button Content="Scan My PC" Command="{Binding ScanCommand}" Style="{StaticResource PrimaryButton}" MinWidth="150" AutomationProperties.AutomationId="ScanButton"/>
@@ -31,7 +31,7 @@
         <TextBlock Text="Incident timeline" FontSize="21" FontWeight="SemiBold" Margin="0,0,0,12"/>
         <TextBox Grid.Row="1" Height="40" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged, Delay=200}" AutomationProperties.Name="Search incidents" ToolTip="Search application, explanation, provider or event ID" Margin="0,0,0,10"/>
         <TextBlock Grid.Row="1" Text="Search application, event ID or keyword" Margin="12,0,12,10" VerticalAlignment="Center" IsHitTestVisible="False" FontSize="12"><TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource Muted}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Search}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
-        <ComboBox Grid.Row="2" ItemsSource="{Binding Categories}" SelectedItem="{Binding Category}" AutomationProperties.Name="Filter incident category" Margin="0,0,0,12"/>
+        <Grid Grid.Row="2" Margin="0,0,0,12"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="100"/></Grid.ColumnDefinitions><ComboBox ItemsSource="{Binding Categories}" SelectedItem="{Binding Category}" AutomationProperties.Name="Filter incident category" Margin="0,0,10,0"/><ComboBox Grid.Column="1" ItemsSource="{Binding Durations}" SelectedItem="{Binding ViewDays}" AutomationProperties.Name="Show incidents in the last number of days" ToolTip="Show the last 1, 7 or 30 days of the completed scan"><ComboBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding StringFormat={}{0} days}"/></DataTemplate></ComboBox.ItemTemplate></ComboBox></Grid>
         <Grid Grid.Row="3"><ListBox ItemsSource="{Binding Incidents}" SelectedItem="{Binding Selected}" AutomationProperties.Name="Incident timeline"><ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" MaxHeight="44" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Subtitle}" Style="{StaticResource Muted}" FontSize="12" Margin="0,8,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate></ListBox><TextBlock Text="{Binding EmptyMessage}" Style="{StaticResource Muted}" Margin="14,18" IsHitTestVisible="False"/></Grid>
       </Grid>
       <Border Grid.Column="2" Style="{StaticResource Card}" Padding="24">
@@ -39,15 +39,17 @@
           <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="{Binding HasSelection, Converter={StaticResource BooleanVisibility}}">
             <StackPanel Margin="0,0,12,0">
               <TextBlock Text="{Binding Selected.Title}" FontSize="24" FontWeight="SemiBold"/><TextBlock Text="{Binding Selected.Subtitle}" Style="{StaticResource Muted}" Margin="0,8,0,16"/>
-              <WrapPanel Margin="0,0,0,24"><Button Content="Copy redacted summary" Command="{Binding CopyCommand}" Margin="0,0,8,8"/><Button Content="Event Viewer" Command="{Binding EventViewerCommand}" Margin="0,0,0,8"/></WrapPanel>
+              <WrapPanel Margin="0,0,0,24"><Button Content="Troubleshoot This Incident" Command="{Binding InvestigateCommand}" Style="{StaticResource PrimaryButton}" Margin="0,0,8,8"/><Button Content="Copy summary" Command="{Binding CopyCommand}" Margin="0,0,8,8"/><Button Content="Prepare diagnostic feedback" Command="{Binding FeedbackCommand}" Margin="0,0,8,8"/><Button Content="Event Viewer" Command="{Binding EventViewerCommand}" Margin="0,0,0,8"/></WrapPanel>
               <TextBlock Text="What Windows recorded" Style="{StaticResource SectionTitle}"/>
               <TextBlock Text="Local evidence may contain private information. Exports omit raw payloads." Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,10"/>
               <TextBox Text="{Binding Selected.Recorded, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="230" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12" BorderThickness="0" Padding="0" AutomationProperties.Name="Original event evidence"/>
               <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,22"/>
-              <TextBlock Text="What it could mean" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding Selected.Explanation}" LineHeight="23"/>
+              <TextBlock Text="What it could mean" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding Selected.Interpretation}" LineHeight="23"/>
+              <TextBlock Text="What remains unknown" Style="{StaticResource SectionTitle}" Margin="0,22,0,10"/><TextBlock Text="{Binding Selected.Unknowns}" LineHeight="23"/>
               <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,22"/>
               <TextBlock Text="What to try next" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding Selected.NextSteps}" LineHeight="23"/>
               <Button Content="Open Reliability Monitor" Command="{Binding ReliabilityCommand}" HorizontalAlignment="Left" Margin="0,18,0,0"/>
+              <TextBlock Text="Investigation history" Style="{StaticResource SectionTitle}" Margin="0,22,0,10"/><TextBlock Text="Use Troubleshoot This Incident to record outcomes and see this incident's next step. Open Local history below to edit or delete older records." Style="{StaticResource Muted}"/>
             </StackPanel>
           </ScrollViewer>
         </Grid>
@@ -56,7 +58,7 @@
     <StackPanel Grid.Row="4" Margin="0,16,0,0">
       <TextBlock Text="{Binding Limitations}" Style="{StaticResource Muted}" FontSize="12" MaxHeight="90"/>
       <Button Content="Reopen as administrator (optional — Windows will ask)" Command="{Binding ElevateCommand}" Visibility="{Binding HasAccessDenied, Converter={StaticResource BooleanVisibility}}" HorizontalAlignment="Left" Margin="0,8,0,0"/>
-      <DockPanel Margin="0,10,0,0"><TextBlock Text="GOODWIN LABS · LogLens 0.1.0 · Diagnostic guidance, never automatic repair" Style="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="GitHub" Command="{Binding RepositoryCommand}" Padding="10,4" MinHeight="28" Margin="12,0,6,0" FontSize="11"/><Button Content="Report an issue" Command="{Binding IssuesCommand}" Padding="10,4" MinHeight="28" Margin="0,0,6,0" FontSize="11"/><Button Content="Privacy" Command="{Binding PrivacyCommand}" Padding="10,4" MinHeight="28" FontSize="11"/></StackPanel></DockPanel>
+      <DockPanel Margin="0,10,0,0"><TextBlock Text="GOODWIN LABS · LogLens 0.1.0 Public Beta · Local diagnostics" Style="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="Local history" Command="{Binding HistoryCommand}" Padding="10,4" MinHeight="28" FontSize="11"/><Button Content="GitHub" Command="{Binding RepositoryCommand}" Padding="10,4" MinHeight="28" Margin="12,0,6,0" FontSize="11"/><Button Content="Report an issue" Command="{Binding IssuesCommand}" Padding="10,4" MinHeight="28" Margin="0,0,6,0" FontSize="11"/><Button Content="Privacy" Command="{Binding PrivacyCommand}" Padding="10,4" MinHeight="28" FontSize="11"/></StackPanel></DockPanel>
     </StackPanel>
   </Grid>
 </Window>

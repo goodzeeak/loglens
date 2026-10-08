@@ -23,7 +23,7 @@ Unknown providers with familiar IDs never trigger these rules. NTFS 98 may be a 
 ## Correlation
 
 - Events outside inclusive absolute-time bounds are ignored. Offset-equivalent timestamps compare equally. Input is ordered by UTC time and stable record identity.
-- Repeated channel/provider/record IDs are deduplicated. Missing IDs fall back to timestamp/structured-field content.
+- Repeated channel/provider/event ID/record ID/UTC timestamp identities are deduplicated. Including time prevents a reused record number after log clearing from inheriting an old investigation. Missing IDs fall back to timestamp/structured-field content.
 - Restart groups span at most 120 seconds from the first record and contain no repeated provider. A second Kernel-Power event starts a separate group. No transitive unbounded chaining.
 - Application pairing permits complementary providers, never repeat Application Error records. Matching nonempty GUID report IDs pair records within 120 seconds. Conflicting valid GUIDs prevent fallback pairing. Otherwise the same nonempty app and module must match within 30 seconds. Missing metadata remains ambiguous.
 - Same-provider storage/hardware/display events can aggregate within 60 seconds only when DeviceName and ID match. Broad grouping without device identity is avoided.
@@ -59,3 +59,6 @@ Recognized Stop codes and application exception codes are translated into their 
 - [Microsoft: Windows Hardware Error Architecture](https://learn.microsoft.com/en-us/windows-hardware/drivers/whea/)
 
 Source descriptions guide conservative observations, not automatic hardware diagnoses. Native provider metadata and synthetic structured fixtures are used to validate field handling.
+
+
+The broadened v0.1.0 module identities, workflow rules, collection sources, fixture counts and limitations are documented in [COVERAGE.md](COVERAGE.md). The collector also reads DHCP Admin, caps total retained events at 10,000, and emits a partial-result warning when that limit is reached. Native XPath selections are split into bounded chunks in a structured QueryList. The 36 original accuracy fixtures remain unchanged; BroadAccuracyFixtures adds 20. Raw scan events are ephemeral; only explicit user investigation entries persist.

@@ -1,0 +1,16 @@
+name: Application bug
+description: UI, scan, history or export problem
+body:
+  - type: input
+    id: version
+    attributes:
+      label: LogLens and Windows version
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps, expected behavior and actual behavior
+      description: Remove private information from screenshots and reports before sharing.
+    validations:
+      required: true

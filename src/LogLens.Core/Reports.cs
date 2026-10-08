@@ -48,13 +48,14 @@ public sealed class ReportBuilder(ReportRedactor redactor)
 {
     public const string Limitations = "Windows logs may be incomplete, delayed, inaccessible or absent. Record times are not necessarily failure times. Nearby events do not prove causation. Two-minute restart grouping is heuristic; separate restarts may be ambiguous. WHEA decoding covers validated CPER headers, section types and generic-processor fields; vendor-specific MCA registers and crash dumps are not decoded. Recorded error categories do not necessarily identify a defective physical component. No detected incidents does not prove the PC is healthy.";
     public const string PrivacyNotice = "Windows logs may contain sensitive information. This report omits raw messages, raw XML, computer/UserID fields and arbitrary event payloads. Known identities, paths, email and IP addresses are redacted where practical. Redaction is not perfect: application names, timestamps and unusual identifiers can still be identifying. Review every section before sharing.";
-    public DiagnosticReport Build(ScanResult scan, string version, string osVersion, DateTimeOffset created)
+    public DiagnosticReport Build(ScanResult scan, string version, string osVersion, DateTimeOffset created,
+        IReadOnlyList<InvestigationEntry>? history = null, bool includeReviewedNotes = false)
     {
         var blocks = new List<ReportBlock>();
         void Add(string heading, params string[] paragraphs) => blocks.Add(new(redactor.Redact(heading), paragraphs.Select(redactor.Redact).ToArray()));
         Add("Report details", $"LogLens {version} · Goodwin Labs\nCreated: {created:O}\nWindows: {osVersion}\nScan period: {scan.Period.Start:O} to {scan.Period.End:O}\nCompleted: {scan.CompletedAt:O}");
         Add("Privacy — review before sharing", PrivacyNotice);
-        Add("Incident summary", $"{scan.Incidents.Count} incidents from {scan.EventCount} relevant records. {(scan.Issues.Count > 0 ? "Partial results: collection limitations are listed below." : "Selected System and Application records were scanned within the configured limits.")}",
+        Add("Incident summary", $"{scan.Incidents.Count} incidents from {scan.EventCount} relevant records. {(scan.Issues.Count > 0 ? "Partial results: collection limitations are listed below." : "Selected System, Application and DHCP Admin records were scanned within the configured limits.")}",
             string.Join("\n", scan.Incidents.GroupBy(i => i.CategoryLabel).Select(g => $"{g.Key}: {g.Count()}")));
         foreach (var issue in scan.Issues) Add($"Collection limitation: {issue.Channel}", issue.Message);
         foreach (var incident in scan.Incidents)
@@ -62,13 +63,35 @@ public sealed class ReportBuilder(ReportRedactor redactor)
             Add($"{incident.Time:O} · {incident.Title}", $"Category: {incident.CategoryLabel} · Severity: {incident.Severity}");
             Add("What Windows recorded", incident.Evidence.Select(Evidence).ToArray());
             if (incident.Context.Count > 0) Add("Nearby context — no causal relationship established", incident.Context.Select(Evidence).ToArray());
-            Add("What it could mean", incident.Findings.Select(f => $"{Incident.Label(f.Classification)}: {f.Text}").ToArray());
+            Add("What it could mean", incident.Findings.Where(f => f.Classification != EvidenceClass.InsufficientEvidence).Select(f => $"{Incident.Label(f.Classification)}: {f.Text}").ToArray());
+            Add("What remains unknown", incident.Unknowns);
             Add("What to try next", incident.Recommendations.Select((r, index) => $"{index + 1}. {r.Text}").ToArray());
+            if (history != null)
+            {
+                var relevant = history.Where(h => h.IncidentId == incident.Id && h.Category == incident.Category).ToArray();
+                if (relevant.Length > 0) Add("Selected investigation history — user-reported outcomes", relevant.Select(h =>
+                    $"{h.PerformedAt:O} · {h.StepId}\n{h.Step}\nOutcome: {InvestigationEntry.OutcomeLabel(h.Outcome)}" +
+                    (includeReviewedNotes && h.Notes.Length > 0 ? "\nReviewed notes: " + h.Notes : "\nFree-text notes omitted.")).ToArray());
+                var next = new InvestigationEngine().Next(incident, relevant);
+                Add("Current investigation step", next.Action, next.Why, next.Safety, next.FollowUp);
+            }
         }
         Add("Diagnostic limitations", Limitations);
-        Add("Original records and support", "Use Windows Event Viewer → Windows Logs → System or Application. Match the channel, provider, event ID and record ID printed above. Records may be cleared or overwritten. LogLens never executes event content.",
+        Add("Original records and support", "Use Windows Event Viewer → Windows Logs → System or Application, or Applications and Services Logs → Microsoft → Windows → Dhcp-Client → Admin. Match the channel, provider, event ID and record ID printed above. Records may be cleared or overwritten. LogLens never executes event content.",
             "Repository: github.com/goodzeeak/loglens\nIssues: github.com/goodzeeak/loglens/issues\nPrivacy: github.com/goodzeeak/loglens/blob/main/docs/PRIVACY.md");
         return new(blocks);
+    }
+    public DiagnosticReport Feedback(ScanResult scan, Incident incident, string version, string osVersion, string expectedBehavior)
+    {
+        var report = Build(scan with { Incidents = [incident] }, version, osVersion, DateTimeOffset.UtcNow);
+        var normalized = incident.Evidence.Select(e => e.Reference + "\n" + string.Join("; ", e.Fields
+            .Where(p => new[] { "EventName", "AppName", "ModuleName", "ExceptionCode", "BugcheckCode", "errorCode", "FailureStatus", "StatusCode", "ResetReason" }.Contains(p.Key, StringComparer.OrdinalIgnoreCase))
+            .Select(p => p.Key + "=" + p.Value))).Select(redactor.Redact).ToArray();
+        return new([new("Voluntary diagnostic feedback", ["No upload is performed. Redaction applied by default; raw event payloads, device identifiers, DNS query names and investigation notes omitted. Review before sharing. This minimized export may not fully reproduce binary WHEA decoding or missing source records."]),
+            .. report.Blocks,
+            new("Normalized evidence", normalized),
+            new("Rules applied", [string.Join(", ", incident.Findings.Select(f => f.Code).Concat(incident.Recommendations.Select(r => r.Code)))]),
+            new("Expected or reported behavior — user supplied", [redactor.Redact(expectedBehavior)])]);
     }
     private static string Evidence(DiagnosticEvent e)
     {

@@ -6,12 +6,12 @@ namespace LogLens.Tests;
 
 public sealed class AccuracyTests
 {
-    public static IEnumerable<object[]> Fixtures => AccuracyFixtures.All.Select(f => new object[] { f.Name });
+    public static IEnumerable<object[]> Fixtures => AccuracyFixtures.All.Concat(BroadAccuracyFixtures.All).Select(f => new object[] { f.Name });
     [Theory]
     [MemberData(nameof(Fixtures))]
     public void MandatoryDiagnosticAccuracy(string name)
     {
-        var fixture = AccuracyFixtures.All.Single(f => f.Name == name);
+        var fixture = AccuracyFixtures.All.Concat(BroadAccuracyFixtures.All).Single(f => f.Name == name);
         var engine = new DiagnosticEngine();
         var actual = engine.Analyze(fixture.Events, AccuracyFixtures.Period);
         Assert.Equal(fixture.Incidents.Length, actual.Count);

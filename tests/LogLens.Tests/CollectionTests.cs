@@ -33,17 +33,17 @@ public sealed class CollectionTests
     public async Task ChannelFailuresBecomePartialResults(string failure)
     {
         var result = await new WindowsEventCollector(new FailureFactory(failure)).CollectAsync(AccuracyFixtures.Period, null, default);
-        Assert.Equal(2, result.Issues.Count); Assert.All(result.Issues, i => Assert.Equal(failure, i.Code)); Assert.Empty(result.Events);
+        Assert.Equal(WindowsEventCollector.Channels.Count, result.Issues.Count); Assert.All(result.Issues, i => Assert.Equal(failure, i.Code)); Assert.Empty(result.Events);
     }
     [Fact] public async Task MalformedRecordDoesNotPreventNextRecord()
     {
         var result = await new WindowsEventCollector(new FakeFactory(["<bad/>", Xml])).CollectAsync(AccuracyFixtures.Period, null, default);
-        Assert.Single(result.Events); Assert.Equal(2, result.Issues.Count);
+        Assert.Single(result.Events); Assert.Equal(WindowsEventCollector.Channels.Count, result.Issues.Count);
     }
     [Fact] public async Task ScanLimitProducesWarning()
     {
         var result = await new WindowsEventCollector(new FakeFactory(Enumerable.Repeat(Xml, 5001).ToArray())).CollectAsync(AccuracyFixtures.Period, null, default);
-        Assert.Equal(5000, result.Events.Count); Assert.Equal(2, result.Issues.Count(i => i.Code == "limit"));
+        Assert.Equal(5000, result.Events.Count); Assert.Equal(WindowsEventCollector.Channels.Count, result.Issues.Count(i => i.Code == "limit"));
     }
     [Fact] public async Task TotalPayloadBudgetBoundsMemory()
     {
@@ -63,7 +63,7 @@ public sealed class CollectionTests
     [Fact] public async Task MissingLogsPropagateThroughScanService()
     {
         var scan = await new ScanService(new WindowsEventCollector(new FailureFactory("missing")), new()).ScanAsync(AccuracyFixtures.Period, null, default);
-        Assert.Empty(scan.Incidents); Assert.Equal(2, scan.Issues.Count);
+        Assert.Empty(scan.Incidents); Assert.Equal(WindowsEventCollector.Channels.Count, scan.Issues.Count);
     }
     [Fact] public async Task NativeWindowsReadOnlyIntegration()
     {

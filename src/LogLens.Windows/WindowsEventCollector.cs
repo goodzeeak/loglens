@@ -27,6 +27,7 @@ public sealed class WindowsEventCollector(IRecordReaderFactory? factory = null) 
     private readonly IRecordReaderFactory factory = factory ?? new NativeRecordReaderFactory();
     public const int MaximumRecordsPerChannel = 5000;
     public const int MaximumRetainedCharacters = 8 * 1024 * 1024;
+    public static IReadOnlyList<string> Channels { get; } = ["System", "Application", "Microsoft-Windows-Dhcp-Client/Admin"];
     public Task<CollectionResult> CollectAsync(ScanPeriod period, IProgress<string>? progress, CancellationToken cancellationToken)
     {
         period.Validate();
@@ -37,14 +38,16 @@ public sealed class WindowsEventCollector(IRecordReaderFactory? factory = null) 
         period.Validate();
         var start = period.Start.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ", CultureInfo.InvariantCulture);
         var end = period.End.UtcDateTime.ToString("yyyy-MM-ddTHH:mm:ss.fffffffZ", CultureInfo.InvariantCulture);
-        var ids = channel == "System" ? new[] { 41, 6008, 1001, 1, 17, 18, 19, 20, 46, 47, 7, 11, 15, 51, 153, 157, 129, 55, 98, 140, 4101 } : new[] { 1000, 1001, 1002 };
+        if (!Channels.Contains(channel)) throw new ArgumentException("Unsupported event channel.", nameof(channel));
+        var ids = DiagnosticModules.All.SelectMany(m => m.Sources).Where(s => s.Channel == channel).SelectMany(s => s.Identifiers).Distinct().ToArray();
         // Native filter bounds time and candidate IDs; managed rules enforce the full provider/channel identity.
-        return $"*[System[TimeCreated[@SystemTime >= '{start}' and @SystemTime <= '{end}'] and ({string.Join(" or ", ids.Select(id => $"EventID={id}"))})]]";
+        return "<QueryList><Query Id=\"0\" Path=\"" + channel + "\">" + string.Concat(ids.Chunk(12).Select(chunk =>
+            "<Select Path=\"" + channel + "\">" + SecurityElement.Escape($"*[System[TimeCreated[@SystemTime >= '{start}' and @SystemTime <= '{end}'] and ({string.Join(" or ", chunk.Select(id => $"EventID={id}"))})]]") + "</Select>")) + "</Query></QueryList>";
     }
     private CollectionResult Collect(ScanPeriod period, IProgress<string>? progress, CancellationToken token)
     {
         var events = new List<DiagnosticEvent>(); var issues = new List<CollectionIssue>(); var retained = 0;
-        foreach (var channel in new[] { "System", "Application" })
+        foreach (var channel in Channels)
         {
             token.ThrowIfCancellationRequested(); progress?.Report($"Reading {channel} records…");
             var malformed = 0;
@@ -66,6 +69,11 @@ public sealed class WindowsEventCollector(IRecordReaderFactory? factory = null) 
                         var item = EventXmlParser.Parse(xml);
                         if (item.Channel == channel && item.Time >= period.Start && item.Time <= period.End && EventRules.Category(item) != null)
                         {
+                            if (events.Count == DiagnosticEngine.MaximumEvents)
+                            {
+                                issues.Add(new(channel, "limit", "The total event limit was reached. Results are partial; choose a shorter period."));
+                                return new(events, issues);
+                            }
                             var characters = item.Fields.Sum(p => p.Key.Length + p.Value.Length) + item.Provider.Length + item.Channel.Length;
                             if (retained + characters > MaximumRetainedCharacters)
                             {

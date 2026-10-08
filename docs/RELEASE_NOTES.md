@@ -1,19 +1,17 @@
-# LogLens 0.1.0 — MVP release candidate
+# LogLens 0.1.0 — Public Beta
 
-Goodwin Labs' local Windows diagnostic app translates selected recent event records into evidence-based incident reports.
+Goodwin Labs' local diagnostic application now covers selected failures across system instability, applications, hardware, display/device drivers, storage, networking, services, Windows Update and fast startup. See COVERAGE.md for exact sources, tested behavior and unsupported areas.
 
-- Unexpected restart, application failure/hang, WHEA, storage and display recovery incidents.
-- Provider/channel/ID matching, exact-record deduplication and conservative correlation.
-- Confirmed observations, conditional hypotheses and explicit missing-evidence statements.
-- 24-hour, seven-day and 30-day read-only scans with cancellation and collection limits.
-- Dark/light WPF dashboard, filters, evidence details and safe next-step guidance.
-- Native Windows 11 title-bar theming, consistently sized inputs and themed dropdowns.
-- Specific Stop/exception/storage error explanations and validated CPER processor/cache findings, including severity and processor ID where recorded.
-- Minimized/redacted report preview, self-contained HTML export and summary copying.
-- Portable self-contained Windows x64 packaging, checksums and Windows CI.
+- Independent diagnostic modules with provider/channel/ID matching, structured evidence and conservative correlation.
+- Guided investigation: known facts, unknowns, one next step, reason, safety, outcome meanings and follow-up.
+- Local editable outcome history, persisted without raw event logs; delete individual entries or clear all.
+- Reports optionally include reviewed history; free-text notes require separate review and opt-in.
+- Voluntary diagnostic feedback export with rule IDs and minimized evidence; no automatic upload or issue creation.
+- Category, time and search filters; existing native title-bar theming and matched controls retained.
+- Original LogLens lens/log logo, embedded multi-resolution Windows icon and reusable SVG/PNG assets.
+- 56 predetermined accuracy fixtures, including the 36 preserved original fixtures and 20 added broad-coverage cases.
+- Self-contained Windows x64 packaging, checksums, read-only collection and Windows CI.
 
-Hardening found and corrected a false-positive rule for healthy NTFS 98 records and a WPF theme inheritance issue. Both have regression coverage.
+Known limits: selected events only; heuristic restart timing; incomplete WER identity; no dump or vendor MCA decoding; no general performance diagnosis; no comprehensive installer/servicing/boot-recovery parser; history is exact-incident scoped and may remain separate when evidence grouping changes; no automatic fixes; no signed executable. Windows 10, clean-machine and accessibility/DPI checks remain manual validation work.
 
-Known limitations: heuristic restart timing; delayed or incomplete WER metadata; no dump or vendor-specific MCA decoding; no automatic fixes; no diagnostic history; no signed executable; Windows 10 and accessibility/DPI matrix still require manual release validation. No production-readiness claim is made solely from passing tests.
-
-No public release has been authorized or published as part of this implementation.
+No public release is authorized by this preparation. Version remains 0.1.0. See VALIDATION.md and RELEASE_DRAFT.md before any release action.

@@ -16,6 +16,17 @@ public partial class MainWindow : Window, IDesktopActions
         Closed += (_, _) => ((MainViewModel)DataContext).Dispose();
     }
     public void Preview(DiagnosticReport report) => new ReportWindow(report) { Owner = this }.ShowDialog();
+    public void Investigate(Incident? incident) => new InvestigationWindow(incident, new(InvestigationViewModel.DefaultPath)) { Owner = this }.ShowDialog();
+    public ReportSelection? SelectReportOptions(IReadOnlyList<InvestigationEntry> history)
+    {
+        var options = new ExportOptionsWindow(history) { Owner = this };
+        return options.ShowDialog() == true ? options.Selection : null;
+    }
+    public string? RequestFeedback()
+    {
+        var options = new ExportOptionsWindow([], true) { Owner = this };
+        return options.ShowDialog() == true ? options.Feedback : null;
+    }
     public void Copy(string text) => Clipboard.SetText(text);
     public void OpenReliability() => Process.Start(new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "perfmon.exe"), "/rel") { UseShellExecute = true });
     public void OpenEventViewer() => Process.Start(new ProcessStartInfo(Path.Combine(Environment.SystemDirectory, "mmc.exe"), "eventvwr.msc") { UseShellExecute = true });

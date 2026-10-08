@@ -27,3 +27,13 @@ Follow the recommendations specific to your incident. Record changes and test on
 ## Export problems
 
 Choose a writable folder and verify free disk space. Review the exported HTML before sharing. It deliberately omits raw messages and payloads. Reports are plain local files; no cloud upload occurs. If clipboard access temporarily fails, close the competing clipboard application and try again.
+
+## History and next steps
+
+Open **Local history** to edit or delete saved entries. A non-recurrence intentionally pauses further changes for observation; update the last entry if the issue returns. Inconclusive and skipped results rule out nothing. Exhausted guidance asks for new evidence or qualified support rather than looping over completed steps. History is local to this Windows user and exact incident identity; it is not a universal diagnosis for similar events.
+
+If history is unreadable, the app preserves the file at `%LOCALAPPDATA%\Goodwin Labs\LogLens\investigations.json`. Restore a known backup or use the explicit Clear all history action to start again. Export without history remains possible. No history recovery or cloud synchronization is provided.
+
+## A network/service/update/boot warning does not match my symptom
+
+Review COVERAGE.md. Selected historical events establish an event-specific failure, not a broad root cause. A service may be unused, a driver may subsequently load, DHCP may later recover or an update may later install. Compare the named feature and timing before changing anything. Use Prepare diagnostic feedback for inaccurate language.

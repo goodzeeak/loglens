@@ -1,10 +1,12 @@
 # LogLens
 
+![LogLens icon](branding/LogLens.svg)
+
 **Understand why your Windows PC keeps crashing.** A free, local-first Windows diagnostic app by **Goodwin Labs**.
 
-LogLens reads selected System and Application event records, groups related records into incidents, and separates confirmed observations from possible explanations and missing evidence. It never automatically repairs your PC.
+LogLens reads selected System, Application and DHCP Admin event records, groups related records into incidents, and separates confirmed observations from possible explanations and missing evidence. It never automatically repairs your PC.
 
-**Status: MVP release candidate, not yet production-certified.** See [validation](docs/VALIDATION.md) for checks actually performed and the remaining manual release gate. No public binary release has been authorized.
+**Status: v0.1.0 Public Beta preparation; not production-certified.** See [validation](docs/VALIDATION.md) for checks actually performed and the remaining manual release gate. No public binary release has been authorized.
 
 ## Run
 
@@ -12,7 +14,8 @@ LogLens reads selected System and Application event records, groups related reco
 2. Open `LogLens.exe`. The portable package includes the .NET runtime; no installation, account or administrator privileges are normally needed.
 3. Click **Scan My PC**. The default is seven days; choose 1 (24 hours), 7 or 30 scan days.
 4. Select an incident and read **What Windows recorded**, **What it could mean**, and **What to try next**.
-5. Choose **Preview / export report**, review the minimized and redacted text, then save HTML. Nothing is uploaded.
+5. Choose **Troubleshoot This Incident**, perform a relevant step, then record its outcome. Local history can be edited or deleted.
+6. Choose **Preview / export report**, review the minimized and redacted text, then save HTML. Nothing is uploaded.
 
 Windows 11 x64 is the primary tested platform. Windows 10 x64 compatibility is targeted, but not yet manually validated. Microsoft's .NET 10 support policy covers only qualifying Windows editions/builds; ordinary Windows 10 Home/Pro should not be described as fully supported by Microsoft. Check the [official .NET OS support matrix](https://github.com/dotnet/core/blob/main/release-notes/10.0/supported-os.md).
 
@@ -23,11 +26,13 @@ Unsigned executables may trigger Microsoft Defender SmartScreen. A checksum chec
 - No cloud processing, telemetry, uploads, ads, background service, startup task or automatic system changes.
 - Ordinary scans are read-only. LogLens runs with the invoking user's permissions.
 - If a channel denies access, a visible optional action opens a separate elevated instance through the Windows UAC prompt. It never silently elevates. The original scan remains open.
-- Raw diagnostic data stays in memory until the app closes. Only scan duration/theme settings persist automatically under `%LOCALAPPDATA%\Goodwin Labs\LogLens`.
+- Raw diagnostic data stays in memory until the app closes. Scan duration/theme settings and explicitly saved investigation history persist under `%LOCALAPPDATA%\Goodwin Labs\LogLens`.
 - HTML reports and copied summaries minimize and redact data, but can still identify a person or device. Review before sharing. Local evidence details have not been redacted.
 - Browser links, Event Viewer and Reliability Monitor open only when clicked. Normal scans require no internet.
 
 Read [usage](docs/USAGE.md), [troubleshooting](docs/TROUBLESHOOTING.md), [privacy](docs/PRIVACY.md), [diagnostic rules](docs/DIAGNOSTICS.md), and [release notes](docs/RELEASE_NOTES.md).
+
+See the [coverage matrix](docs/COVERAGE.md) for selected networking, services, update, boot, device, application, storage and hardware detections. General performance diagnosis is unsupported. [Diagnostic feedback](docs/FEEDBACK.md) is a voluntary, reviewed export.
 
 ## Build and test
 
@@ -51,7 +56,7 @@ pwsh ./scripts/package.ps1
 | `LogLens.App` | WPF/MVVM dashboard, themes, progress, filtering, preview/export and explicit platform actions |
 | `LogLens.Tests` | Predetermined accuracy fixtures, negative cases, collection faults, privacy, HTML safety and desktop workflow regression |
 
-Future importers can implement `IEventCollector`; richer rules and report projections can evolve independently of WPF. Dump analysis, technician case management, history, multi-machine support, authentication and billing are deliberately outside this MVP.
+Future importers can implement `IEventCollector`; richer rules and report projections can evolve independently of WPF. Dump analysis, technician case management, multi-machine support, authentication and billing are deliberately outside this MVP.
 
 ## Contribute / release
 

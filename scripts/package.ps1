@@ -15,6 +15,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw 'Publish failed.' }
     Copy-Item -LiteralPath README.md,LICENSE -Destination $packageRoot
     Copy-Item -LiteralPath docs -Destination $packageRoot -Recurse
+    Copy-Item -LiteralPath branding -Destination $packageRoot -Recurse
     foreach ($required in @('LogLens.exe','LogLens.dll','LogLens.runtimeconfig.json','coreclr.dll','hostfxr.dll','PresentationFramework.dll','System.Diagnostics.EventLog.dll','README.md','LICENSE')) {
         if (-not (Test-Path -LiteralPath (Join-Path $packageRoot $required))) { throw "Missing portable runtime file: $required" }
     }
@@ -24,6 +25,10 @@ try {
     $executableBytes = [IO.File]::ReadAllBytes((Join-Path $packageRoot 'LogLens.exe'))
     $peOffset = [BitConverter]::ToInt32($executableBytes, 0x3c)
     if ([BitConverter]::ToUInt16($executableBytes, $peOffset + 4) -ne 0x8664) { throw 'Portable executable must be x64.' }
+    Add-Type -AssemblyName System.Drawing
+    $icon = [Drawing.Icon]::ExtractAssociatedIcon((Join-Path $packageRoot 'LogLens.exe'))
+    if (-not $icon) { throw 'Executable icon is missing.' }
+    $icon.Dispose()
     $zip = Join-Path $artifactRoot ('LogLens-' + $Version + '-win-x64.zip')
     Compress-Archive -LiteralPath $packageRoot -DestinationPath $zip -Force
     $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()

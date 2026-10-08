@@ -1,6 +1,6 @@
 namespace LogLens.Core;
 
-public enum IncidentCategory { UnexpectedRestart, ApplicationCrash, Hardware, Storage, Display }
+public enum IncidentCategory { UnexpectedRestart, ApplicationCrash, Hardware, Storage, Display, DeviceDriver, Network, Service, Update, Boot }
 public enum EvidenceClass { ConfirmedObservation, PossibleCause, InsufficientEvidence }
 public enum Severity { Warning, Error, Critical }
 public sealed record DiagnosticEvent(string Channel, string Provider, int EventId, long? RecordId,
@@ -19,10 +19,15 @@ public sealed record Incident(string Id, IncidentCategory Category, Severity Sev
     public string CategoryLabel => Category switch
     {
         IncidentCategory.UnexpectedRestart => "Unexpected restart", IncidentCategory.ApplicationCrash => "Application failure",
-        IncidentCategory.Hardware => "Hardware", IncidentCategory.Storage => "Storage", _ => "Display"
+        IncidentCategory.Hardware => "Hardware", IncidentCategory.Storage => "Storage", IncidentCategory.Display => "Display",
+        IncidentCategory.DeviceDriver => "Device driver", IncidentCategory.Network => "Network", IncidentCategory.Service => "Service",
+        IncidentCategory.Update => "Windows Update", IncidentCategory.Boot => "Boot", _ => Category.ToString()
     };
     public string Subtitle => $"{LocalTime} · {CategoryLabel} · {Severity} · {Evidence.Count} {(Evidence.Count == 1 ? "record" : "records")}";
     public string Explanation => string.Join("\n\n", Findings.Select(f => $"{Label(f.Classification)}: {f.Text}"));
+    public string Unknowns => string.Join("\n\n", Findings.Where(f => f.Classification == EvidenceClass.InsufficientEvidence).Select(f => f.Text));
+    public string Interpretation => string.Join("\n\n", Findings.Where(f => f.Classification != EvidenceClass.InsufficientEvidence).Select(f => $"{Label(f.Classification)}: {f.Text}"));
+    public string Known => string.Join("\n\n", Findings.Where(f => f.Classification == EvidenceClass.ConfirmedObservation).Select(f => f.Text));
     public string NextSteps => string.Join("\n\n", Recommendations.Select((r, i) => $"{i + 1}. {r.Text}"));
     public string Recorded => string.Join("\n\n", Evidence.Select(Describe)) +
         (Context.Count == 0 ? "" : "\n\nNearby context — timing does not establish causation:\n" + string.Join("\n\n", Context.Select(Describe)));
