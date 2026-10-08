@@ -9,6 +9,7 @@ public sealed record EventDetection(string Channel, string Provider, int Id, str
 internal sealed class DeclaredModule(IncidentCategory category, EventDetection[] rules) : DiagnosticModule
 {
     public override IncidentCategory Category => category;
+    public override TimeSpan CorrelationWindow => TimeSpan.Zero;
     public override IReadOnlyList<EventSource> Sources { get; } = rules.Select(r => new EventSource(r.Channel, r.Provider, [r.Id])).ToArray();
     public IReadOnlyList<EventDetection> Rules => rules;
     private EventDetection? Match(DiagnosticEvent e) => rules.FirstOrDefault(r => e.Channel.Equals(r.Channel, StringComparison.OrdinalIgnoreCase)

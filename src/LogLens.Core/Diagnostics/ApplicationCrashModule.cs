@@ -2,6 +2,7 @@ namespace LogLens.Core;
 
 internal sealed class ApplicationCrashModule : DiagnosticModule
 {
+    public override TimeSpan CorrelationWindow => TimeSpan.FromSeconds(120);
     public override bool CanJoin(List<DiagnosticEvent> group, DiagnosticEvent next)
     {
         var first = group[0]; var seconds = (next.Time - first.Time).TotalSeconds;

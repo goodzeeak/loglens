@@ -9,6 +9,7 @@ public interface IDiagnosticModule
 {
     IncidentCategory Category { get; }
     IReadOnlyList<EventSource> Sources { get; }
+    TimeSpan CorrelationWindow { get; }
     bool Matches(DiagnosticEvent e);
     bool CanJoin(List<DiagnosticEvent> group, DiagnosticEvent next);
     Incident Build(List<DiagnosticEvent> evidence, List<DiagnosticEvent> all);
@@ -17,6 +18,7 @@ public abstract class DiagnosticModule : IDiagnosticModule
 {
     public abstract IncidentCategory Category { get; }
     public abstract IReadOnlyList<EventSource> Sources { get; }
+    public virtual TimeSpan CorrelationWindow => TimeSpan.FromSeconds(60);
     public virtual bool Matches(DiagnosticEvent e) => Sources.Any(s => s.Matches(e));
     public abstract Incident Build(List<DiagnosticEvent> evidence, List<DiagnosticEvent> all);
     public virtual bool CanJoin(List<DiagnosticEvent> group, DiagnosticEvent e)

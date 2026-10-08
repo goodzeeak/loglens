@@ -23,6 +23,8 @@ The starting commit was 1f6c72afa0f3d303980ffe4b4c8ed0fddea4bce2. Its 98 tests a
 
 Native visual testing caught doubled padding in the custom TextBox template that clipped the 40-pixel date input. The redundant content-host margin was removed; standard TextBox padding remains.
 
+Windows CI exposed a regression in the 10,000-event test: repeatedly searching and classifying every old group exceeded the unchanged 20-second limit. Correlation now caches module classification and discards expired candidate groups using the declared anchored windows. The original performance test and all 56 accuracy fixtures pass after the correction.
+
 The local SDK is .NET 10.0.401 with runtime 10.0.12. New provider meanings and channel mappings were inspected from Microsoft-shipped provider metadata. No real diagnostic payloads were committed. CI test output does not include private event fields.
 
 Every mandatory fixture asserts expected category, complete confirmed-finding codes, permitted hypothesis codes, recommendations and correlation counts; it checks prohibited causal conclusions and deterministic repeated/reversed input. General performance diagnosis is unsupported, not inferred from passing tests.

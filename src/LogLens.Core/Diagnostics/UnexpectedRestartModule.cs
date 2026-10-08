@@ -2,6 +2,7 @@ namespace LogLens.Core;
 
 internal sealed class UnexpectedRestartModule : DiagnosticModule
 {
+    public override TimeSpan CorrelationWindow => TimeSpan.FromSeconds(120);
     public override bool CanJoin(List<DiagnosticEvent> group, DiagnosticEvent next) =>
         (next.Time - group[0].Time).TotalSeconds <= 120 && !group.Any(e => e.Provider.Equals(next.Provider, StringComparison.OrdinalIgnoreCase));
     public override IncidentCategory Category => IncidentCategory.UnexpectedRestart;
@@ -29,8 +30,8 @@ internal sealed class UnexpectedRestartModule : DiagnosticModule
                 }
                 if (evidence.Any(e => SpecificFindings.StopCode(e) == 0x9F)) Step("power-driver", "Focus on drivers involved in sleep, wake or device power changes. Compare recent chipset, network, USB or storage driver changes; a dump can identify the stalled power request.");
                 if (evidence.Any(e => SpecificFindings.StopCode(e) == 0x116)) Step("graphics", "Focus on the graphics driver and GPU workload. Compare driver changes, test stock GPU settings and inspect the dump for the named display driver.");
-                context.AddRange(all.Where(e => EventRules.Category(e) is IncidentCategory.Hardware or IncidentCategory.Storage or IncidentCategory.Display &&
-                    e.Time <= first.Time && first.Time - e.Time <= TimeSpan.FromMinutes(5)).TakeLast(20));
+                context.AddRange(all.Where(e => e.Time <= first.Time && first.Time - e.Time <= TimeSpan.FromMinutes(5) &&
+                    EventRules.Category(e) is IncidentCategory.Hardware or IncidentCategory.Storage or IncidentCategory.Display).TakeLast(20));
                 if (context.Count > 0) Fact("nearby", "Hardware, storage or display records were logged nearby and are shown as context. Timing alone does not establish a cause or prove they occurred before the actual shutdown.");
                 Unknown("These records cannot establish the root cause. Power loss, a forced restart and other failures can leave similar records. Complementary restart records within two minutes are grouped heuristically.");
                 Step("reliability", "Open Windows Reliability Monitor and compare the recorded time with what you were doing. Note any recent changes.");
