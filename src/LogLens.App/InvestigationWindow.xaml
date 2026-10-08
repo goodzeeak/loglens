@@ -2,8 +2,8 @@
   <Grid Margin="24">
     <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
     <StackPanel Margin="0,0,0,18"><TextBlock Text="GUIDED INVESTIGATION · LOCAL HISTORY" Style="{StaticResource Muted}" FontSize="11"/><TextBlock Text="{Binding Title}" FontSize="24" FontWeight="SemiBold" Margin="0,5,0,0"/></StackPanel>
-    <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="20"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
-      <ScrollViewer VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,0,12,0">
+    <Grid Grid.Row="1"><Grid.ColumnDefinitions><ColumnDefinition><ColumnDefinition.Style><Style TargetType="ColumnDefinition"><Setter Property="Width" Value="*"/><Style.Triggers><DataTrigger Binding="{Binding HasIncident}" Value="False"><Setter Property="Width" Value="0"/></DataTrigger></Style.Triggers></Style></ColumnDefinition.Style></ColumnDefinition><ColumnDefinition><ColumnDefinition.Style><Style TargetType="ColumnDefinition"><Setter Property="Width" Value="20"/><Style.Triggers><DataTrigger Binding="{Binding HasIncident}" Value="False"><Setter Property="Width" Value="0"/></DataTrigger></Style.Triggers></Style></ColumnDefinition.Style></ColumnDefinition><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <ScrollViewer Visibility="{Binding HasIncident, Converter={StaticResource BooleanVisibility}}" VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,0,12,0">
         <TextBlock Text="What we know" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding Known}" Margin="0,0,0,18"/>
         <TextBlock Text="What we don't know" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding Unknowns}" Margin="0,0,0,18"/>
         <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="Your next step" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding Plan.Action}" FontSize="16" FontWeight="SemiBold"/></StackPanel></Border>
@@ -14,14 +14,14 @@
       </StackPanel></ScrollViewer>
       <ScrollViewer Grid.Column="2" VerticalScrollBarVisibility="Auto"><StackPanel Margin="0,0,10,0">
         <TextBlock Text="Investigation history" Style="{StaticResource SectionTitle}"/>
-        <CheckBox Content="Show history for all incidents" IsChecked="{Binding ShowAll}" Margin="0,0,0,12"/>
-        <ListBox ItemsSource="{Binding History}" SelectedItem="{Binding Selected}" Height="180" AutomationProperties.Name="Previous investigation steps"><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Summary}" FontSize="12"/></DataTemplate></ListBox.ItemTemplate></ListBox>
-        <WrapPanel Margin="0,8,0,18"><Button Content="New outcome" Command="{Binding NewCommand}" Margin="0,0,8,8"/><Button Content="Delete selected" Command="{Binding DeleteCommand}" Margin="0,0,8,8"/><Button Content="Clear all history…" Command="{Binding ClearCommand}" Margin="0,0,0,8"/></WrapPanel>
-        <TextBlock Text="{Binding EditorTitle}" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding EditingStep}" Margin="0,0,0,14"/>
+        <TextBlock Text="{Binding HistoryHint}" Style="{StaticResource Muted}" Margin="0,0,0,12"/><CheckBox Visibility="{Binding HasIncident, Converter={StaticResource BooleanVisibility}}" Content="Show history for all incidents" IsChecked="{Binding ShowAll}" Margin="0,0,0,12"/>
+        <ListBox ItemsSource="{Binding History}" SelectedItem="{Binding Selected}" Height="180" AutomationProperties.Name="Previous investigation steps"><ListBox.ItemContainerStyle><Style TargetType="ListBoxItem" BasedOn="{StaticResource {x:Type ListBoxItem}}"><Setter Property="AutomationProperties.Name" Value="{Binding AccessibilityLabel}"/></Style></ListBox.ItemContainerStyle><ListBox.ItemTemplate><DataTemplate><TextBlock Text="{Binding Summary}" FontSize="12"/></DataTemplate></ListBox.ItemTemplate></ListBox>
+        <WrapPanel Margin="0,8,0,18"><Button Visibility="{Binding HasIncident, Converter={StaticResource BooleanVisibility}}" Content="New outcome" Command="{Binding NewCommand}" Margin="0,0,8,8"/><Button Content="Delete selected" Command="{Binding DeleteCommand}" Margin="0,0,8,8"/><Button Content="Clear all history…" Command="{Binding ClearCommand}" Margin="0,0,0,8"/></WrapPanel>
+        <TextBlock Text="{Binding EditorPrompt}" Style="{StaticResource Muted}"/><StackPanel Visibility="{Binding ShowEditor, Converter={StaticResource BooleanVisibility}}"><TextBlock Text="{Binding EditorTitle}" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding EditingStep}" Margin="0,0,0,14"/>
         <TextBlock Text="Date performed · local time (yyyy-MM-dd HH:mm)" Style="{StaticResource Muted}" Margin="0,0,0,5"/><TextBox Height="40" Text="{Binding PerformedDate, UpdateSourceTrigger=PropertyChanged}" AutomationProperties.Name="Date performed in local time" Margin="0,0,0,12"/>
         <TextBlock Text="Outcome" Style="{StaticResource Muted}" Margin="0,0,0,5"/><ComboBox ItemsSource="{Binding Outcomes}" SelectedItem="{Binding Outcome}" AutomationProperties.Name="Investigation outcome" Margin="0,0,0,12"/>
         <TextBlock Text="Optional private notes · 2,000 characters maximum" Style="{StaticResource Muted}" Margin="0,0,0,5"/><TextBox Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}" AcceptsReturn="True" VerticalContentAlignment="Top" TextWrapping="Wrap" Height="100" VerticalScrollBarVisibility="Auto" MaxLength="2000" AutomationProperties.Name="Optional investigation notes"/>
-        <Button Content="Save outcome" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,16,0,0"/>
+        <Button Content="Save outcome" Command="{Binding SaveCommand}" Style="{StaticResource PrimaryButton}" HorizontalAlignment="Left" Margin="0,16,0,0"/></StackPanel>
       </StackPanel></ScrollViewer>
     </Grid>
     <TextBlock Grid.Row="2" Text="{Binding Status}" Style="{StaticResource Muted}" Margin="0,18,0,0" AutomationProperties.LiveSetting="Polite"/>

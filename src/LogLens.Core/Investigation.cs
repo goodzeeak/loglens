@@ -7,6 +7,8 @@ public sealed record InvestigationEntry(Guid Id, string IncidentId, IncidentCate
     string Step, DateTimeOffset PerformedAt, InvestigationOutcome Outcome, string Notes)
 {
     public string Summary => $"{PerformedAt.ToLocalTime():g} · {OutcomeLabel(Outcome)} · {Step}";
+    public string AccessibilityLabel => $"{PerformedAt.ToLocalTime():g}, {OutcomeLabel(Outcome)}, {StepId.Replace('-', ' ')}";
+    public override string ToString() => AccessibilityLabel;
     public static string OutcomeLabel(InvestigationOutcome value) => value switch
     { InvestigationOutcome.IssueRecurred => "Issue recurred", InvestigationOutcome.IssueDidNotRecur => "Issue did not recur", InvestigationOutcome.Inconclusive => "Inconclusive", _ => "Skipped" };
 }

@@ -5,6 +5,8 @@ using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
+using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using LogLens.App;
 using LogLens.Core;
 using Xunit;
@@ -40,6 +42,10 @@ public sealed class DesktopTests
                     Assert.Contains("Scan complete", vm.Status);
                     vm.Search = "no-such-app"; Assert.Empty(vm.Incidents); Assert.False(vm.HasSelection);
                     vm.Search = ""; Assert.Single(vm.Incidents);
+                    vm.ViewDays = 1; var dashboard = (Grid)window.Content; dashboard.Measure(new(1280, 840)); dashboard.Arrange(new(0, 0, 1280, 840)); dashboard.UpdateLayout();
+                    Assert.Contains(Descendants<TextBlock>(dashboard), t => t.Text == "1 day");
+                    Assert.DoesNotContain(Descendants<TextBlock>(dashboard), t => t.Text == "1 days");
+                    vm.ViewDays = 30;
                     Capture(window, "dashboard-dark", 1280, 840);
                     vm.Category = "Storage"; Assert.Empty(vm.Incidents);
                     vm.Category = "All incidents"; Assert.Single(vm.Incidents);
@@ -55,6 +61,23 @@ public sealed class DesktopTests
                     investigationVm.SaveCommand.Execute(null);
                     Assert.Single(new InvestigationStore(historyPath).Load()); Assert.Equal("firmware", investigationVm.Plan.StepId);
                     Capture(investigation, "investigation-dark", 1080, 760);
+                    var historyOnly = new InvestigationWindow(null, new(historyPath));
+                    historyOnly.Measure(new(1080, 820)); historyOnly.Arrange(new(0, 0, 1080, 820)); historyOnly.UpdateLayout();
+                    Capture(historyOnly, "history-only-dark", 1080, 760);
+                    Assert.False(((InvestigationViewModel)historyOnly.DataContext).ShowEditor);
+                    var historyRoot = (Grid)historyOnly.Content; historyRoot.Measure(new(1080, 760)); historyRoot.Arrange(new(0, 0, 1080, 760)); historyRoot.UpdateLayout();
+                    var historyList = Descendants<ListBox>(historyRoot).Single();
+                    var historyItem = (ListBoxItem)historyList.ItemContainerGenerator.ContainerFromIndex(0);
+                    Assert.Equal(new InvestigationStore(historyPath).Load().Single().AccessibilityLabel,
+                        System.Windows.Automation.Peers.UIElementAutomationPeer.CreatePeerForElement(historyItem)!.GetName());
+                    var viewer = new ScrollViewer { Width = 200, Height = 120, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, Content = new Border { Width = 1000, Height = 1000 } };
+                    viewer.Measure(new(200, 120)); viewer.Arrange(new(0, 0, 200, 120)); viewer.UpdateLayout();
+                    var bars = Descendants<ScrollBar>(viewer).ToArray(); Assert.Equal(2, bars.Length);
+                    var vertical = bars.Single(b => b.Orientation == Orientation.Vertical);
+                    var horizontal = bars.Single(b => b.Orientation == Orientation.Horizontal);
+                    Assert.NotNull(vertical.Template.FindName("PART_Track", vertical));
+                    ScrollBar.PageDownCommand.Execute(null, vertical); viewer.UpdateLayout(); Assert.True(viewer.VerticalOffset > 0);
+                    ScrollBar.PageRightCommand.Execute(null, horizontal); viewer.UpdateLayout(); Assert.True(viewer.HorizontalOffset > 0);
                     var options = new ExportOptionsWindow(new InvestigationStore(historyPath).Load());
                     options.Measure(new(760, 620)); options.Arrange(new(0, 0, 760, 620)); options.UpdateLayout();
                     Assert.False(options.Selection.IncludeHistory); Assert.False(options.Selection.IncludeReviewedNotes);
@@ -74,6 +97,7 @@ public sealed class DesktopTests
                     Capture(window, "dashboard-light", 1280, 840);
                     Capture(window, "dashboard-small", 960, 660);
                     Capture(investigation, "investigation-light", 1080, 760);
+                    Capture(historyOnly, "history-only-light", 1080, 760); historyOnly.Close();
                     Capture(investigation, "investigation-small", 800, 540);
                     investigation.Close(); options.Close(); feedback.Close(); File.Delete(historyPath);
                     var artifactDirectory = Environment.GetEnvironmentVariable("LOGLENS_TEST_ARTIFACTS");
@@ -102,6 +126,15 @@ public sealed class DesktopTests
         var watch = Stopwatch.StartNew();
         while (vm.IsBusy && watch.Elapsed < TimeSpan.FromSeconds(10)) await Task.Delay(10);
         Assert.False(vm.IsBusy);
+    }
+    private static IEnumerable<T> Descendants<T>(DependencyObject parent) where T : DependencyObject
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+            if (child is T match) yield return match;
+            foreach (var descendant in Descendants<T>(child)) yield return descendant;
+        }
     }
     private static void Capture(Window window, string name, int width, int height)
     {

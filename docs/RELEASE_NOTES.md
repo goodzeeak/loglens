@@ -15,3 +15,5 @@ Goodwin Labs' local diagnostic application now covers selected failures across s
 Known limits: selected events only; heuristic restart timing; incomplete WER identity; no dump or vendor MCA decoding; no general performance diagnosis; no comprehensive installer/servicing/boot-recovery parser; history is exact-incident scoped and may remain separate when evidence grouping changes; no automatic fixes; no signed executable. Windows 10, clean-machine and accessibility/DPI checks remain manual validation work.
 
 No public release is authorized by this preparation. Version remains 0.1.0. See VALIDATION.md and RELEASE_DRAFT.md before any release action.
+
+Polish: singular day labels, translated common service startup errors, cleaner history-only view, concise history accessibility names and theme-matched rounded scrollbars with hover/drag feedback.

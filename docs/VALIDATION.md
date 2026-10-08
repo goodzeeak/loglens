@@ -9,7 +9,7 @@ The starting commit was 1f6c72afa0f3d303980ffe4b4c8ed0fddea4bce2. Its 98 tests a
 | Check | Result |
 | --- | --- |
 | Mandatory semantic fixtures | **56 passed, 0 failed** (36 preserved + 20 new) |
-| Complete xUnit suite | **138 passed, 0 failed, 0 skipped** |
+| Complete xUnit suite | **146 passed, 0 failed, 0 skipped** |
 | Release build and enabled .NET/xUnit analyzers, warnings as errors | Passed |
 | Native read-only EventLogReader integration | Passed locally on Windows 11 x64 build 26200; System/Application/DHCP Admin paths exercised |
 | WPF STA workflow | Passed: scan/search/filter/copy/preview/themes/cancellation; investigation save and next-step transition; export/feedback window construction |
@@ -47,3 +47,5 @@ A successful build, synthetic UI render or positive test count does not establis
 ## Diagnostic limitations
 
 Restart correlation is heuristic. Current logs cannot prove every freeze, physical component failure or internet outage. Optional app/service/update/device fields can be missing. Selected update/boot detection is not comprehensive servicing or recovery analysis. General performance measurement, crash dumps and vendor MCA interpretation remain unsupported. Similar incidents do not share history automatically; if evidence grouping changes at a scan boundary, the prior entry remains available in All history. Redaction is conservative but cannot promise anonymity.
+
+UI polish regression checks cover singular day wording, short history accessibility names, history-only layout, and horizontal/vertical scrollbar page commands. Known SCM 7000 error tokens 2, 3 and 5 are translated only in their documented field; unrelated schemas and malformed tokens remain unchanged.

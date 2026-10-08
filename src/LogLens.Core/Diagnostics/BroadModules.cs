@@ -19,13 +19,27 @@ internal sealed class DeclaredModule(IncidentCategory category, EventDetection[]
     public override Incident Build(List<DiagnosticEvent> evidence, List<DiagnosticEvent> all)
     {
         var first = evidence[0]; var rule = Match(first)!;
-        var details = rule.DetailFields.Where(k => first.Field(k).Length > 0).Select(k => $"{FieldLabel(k, first.EventId)}: {first.Field(k)}");
+        var details = rule.DetailFields.Where(k => first.Field(k).Length > 0).Select(k => $"{FieldLabel(k, first.EventId)}: {FieldValue(k, first)}");
         var fact = rule.Observation + (details.Any() ? "\nRecorded details: " + string.Join("; ", details) : "\nOptional identifying details were not recorded or could not be read.");
         var subject = Category == IncidentCategory.Service ? first.Field("param1") : Category == IncidentCategory.Update ? first.Field("updateTitle") : Category == IncidentCategory.Network ? first.Field("AdapterName") : "";
         var title = rule.Title + (subject.Length > 0 ? ": " + (subject.Length > 120 ? subject[..120] + "…" : subject) : "");
         return new("", Category, rule.Severity, first.Time, title, evidence.ToArray(), [],
             [new(rule.Code, EvidenceClass.ConfirmedObservation, fact), new(rule.Code + "-cause", EvidenceClass.PossibleCause, rule.Hypothesis),
              new("unknown", EvidenceClass.InsufficientEvidence, rule.Unknown)], rule.Steps);
+    }
+    private static string FieldValue(string field, DiagnosticEvent record)
+    {
+        var value = record.Field(field);
+        // Only SCM 7000 param2 is an error insertion. Other SCM events use param2 for names/counts.
+        if (field != "param2" || !EventRules.Is(record, "Service Control Manager", 7000) || !value.StartsWith("%%", StringComparison.Ordinal)) return value;
+        if (!uint.TryParse(value.AsSpan(2), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var code)) return value;
+        return code switch
+        {
+            2 => "The system cannot find the file specified (Windows error 2). This does not identify which file is missing.",
+            3 => "The system cannot find the path specified (Windows error 3).",
+            5 => "Access is denied (Windows error 5).",
+            _ => $"Windows service error {code} (no supported translation; original token {value})."
+        };
     }
     private static string FieldLabel(string field, int id) => field switch
     {

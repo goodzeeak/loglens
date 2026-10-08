@@ -62,3 +62,5 @@ Source descriptions guide conservative observations, not automatic hardware diag
 
 
 The broadened v0.1.0 module identities, workflow rules, collection sources, fixture counts and limitations are documented in [COVERAGE.md](COVERAGE.md). The collector also reads DHCP Admin, caps total retained events at 10,000, and emits a partial-result warning when that limit is reached. Native XPath selections are split into bounded chunks in a structured QueryList. The 36 original accuracy fixtures remain unchanged; BroadAccuracyFixtures adds 20. Raw scan events are ephemeral; only explicit user investigation entries persist.
+
+Service Control Manager 7000 param2 tokens %%2, %%3 and %%5 use the meanings in Microsoft's [system error code reference](https://learn.microsoft.com/en-us/windows/win32/debug/system-error-codes--0-499-). The file-not-found message does not identify the missing file. Other SCM event schemas are not interpreted as error codes.

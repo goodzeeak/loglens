@@ -32,6 +32,10 @@ public sealed class InvestigationViewModel : INotifyPropertyChanged
     public ObservableCollection<InvestigationEntry> History { get; } = [];
     public string[] Outcomes { get; } = Enum.GetValues<InvestigationOutcome>().Select(InvestigationEntry.OutcomeLabel).ToArray();
     public string Title => incident?.Title ?? "Local investigation history";
+    public bool HasIncident => incident != null;
+    public bool ShowEditor => Selected != null || (HasIncident && Plan.CanRecord);
+    public string EditorPrompt => ShowEditor ? "" : "Select a saved entry to view or edit its outcome and notes.";
+    public string HistoryHint => History.Count == 0 ? "No saved outcomes in this view." : "Select an entry to edit it.";
     public string Known => incident?.Known ?? "Saved actions are user reports, not confirmed Windows observations.";
     public string Unknowns => incident?.Unknowns ?? "Similar symptoms can have different causes. Outcomes only influence the exact associated incident.";
     public InvestigationPlan Plan => incident == null ? new(null, "Select an incident on the dashboard to start an investigation.", "History can be edited or deleted here.", "No system changes are made.", "", "") : new InvestigationEngine().Next(incident, all);
@@ -45,7 +49,7 @@ public sealed class InvestigationViewModel : INotifyPropertyChanged
     public InvestigationEntry? Selected
     {
         get => selected;
-        set { selected = value; Notes = value?.Notes ?? ""; Outcome = InvestigationEntry.OutcomeLabel(value?.Outcome ?? InvestigationOutcome.Inconclusive); PerformedDate = (value?.PerformedAt.ToLocalTime() ?? DateTimeOffset.Now).ToString("yyyy-MM-dd HH:mm"); Notify(); Notify(nameof(EditorTitle)); Notify(nameof(EditingStep)); SaveCommand.Refresh(); DeleteCommand.Refresh(); }
+        set { selected = value; Notes = value?.Notes ?? ""; Outcome = InvestigationEntry.OutcomeLabel(value?.Outcome ?? InvestigationOutcome.Inconclusive); PerformedDate = (value?.PerformedAt.ToLocalTime() ?? DateTimeOffset.Now).ToString("yyyy-MM-dd HH:mm"); Notify(); Notify(nameof(EditorTitle)); Notify(nameof(EditingStep)); Notify(nameof(ShowEditor)); Notify(nameof(EditorPrompt)); SaveCommand.Refresh(); DeleteCommand.Refresh(); }
     }
     public RelayCommand SaveCommand { get; }
     public RelayCommand NewCommand { get; }
@@ -78,7 +82,7 @@ public sealed class InvestigationViewModel : INotifyPropertyChanged
     {
         History.Clear();
         foreach (var entry in all.Where(e => ShowAll || (e.IncidentId == incident?.Id && e.Category == incident.Category)).OrderByDescending(e => e.PerformedAt)) History.Add(entry);
-        Notify(nameof(Plan)); Notify(nameof(EditingStep)); SaveCommand.Refresh(); DeleteCommand.Refresh();
+        Notify(nameof(Plan)); Notify(nameof(EditingStep)); Notify(nameof(ShowEditor)); Notify(nameof(EditorPrompt)); Notify(nameof(HistoryHint)); SaveCommand.Refresh(); DeleteCommand.Refresh();
     }
     private void Notify([CallerMemberName] string? name = null) => PropertyChanged?.Invoke(this, new(name));
 }
