@@ -6,7 +6,11 @@
 
 LogLens reads selected System, Application and DHCP Admin event records, groups related records into incidents, and separates confirmed observations from possible explanations and missing evidence. It never automatically repairs your PC.
 
-**Status: v0.1.0 Public Beta preparation; not production-certified.** See [validation](docs/VALIDATION.md) for checks actually performed and the remaining manual release gate. No public binary release has been authorized.
+**Status: v0.1.0 Public Beta.** [Download the Windows x64 portable release](https://github.com/goodzeeak/loglens/releases/tag/v0.1.0). See [validation](docs/VALIDATION.md) for completed checks and remaining manual compatibility/accessibility work.
+
+## Core features
+
+Read-only diagnostic scans; evidence-based incidents; guided troubleshooting; editable local investigation history; reviewed HTML reports and diagnostic feedback exports; dark/light themes. Works offline without an account.
 
 ## Run
 

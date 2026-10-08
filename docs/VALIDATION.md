@@ -1,6 +1,6 @@
 # Validation and beta readiness
 
-8 October 2026. **v0.1.0 Public Beta preparation; not production-certified.** Public release/tag creation remains owner-authorized only.
+8 October 2026. **v0.1.0 Public Beta; not production-certified.** The owner authorized publication on 8 October 2026 with the documented limitations. Automated release gates remain mandatory.
 
 ## Independently verified baseline and current checks
 
