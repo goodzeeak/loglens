@@ -1,0 +1,61 @@
+<Window x:Class="LogLens.App.MainWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="LogLens — Goodwin Labs" Style="{StaticResource {x:Type Window}}" Width="1280" Height="880" MinWidth="960" MinHeight="700" WindowStartupLocation="CenterScreen">
+  <Grid Margin="28,22">
+    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <Grid>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <StackPanel><TextBlock Text="GOODWIN LABS  /  LOCAL DIAGNOSTICS" Style="{StaticResource Muted}" FontSize="11" FontWeight="SemiBold"/><TextBlock Text="LogLens" FontSize="34" FontWeight="SemiBold" Margin="0,4,0,0"/><TextBlock Text="{Binding Summary}" Style="{StaticResource Muted}" Margin="0,4,20,0"/></StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+        <Button Content="Preview / export report" Command="{Binding PreviewCommand}" Margin="0,0,12,0" ToolTip="Preview the full scan report with redaction before saving HTML"/>
+        <Button Content="Scan My PC" Command="{Binding ScanCommand}" Style="{StaticResource PrimaryButton}" MinWidth="150" AutomationProperties.AutomationId="ScanButton"/>
+      </StackPanel>
+    </Grid>
+    <Grid Grid.Row="1" Margin="0,22,0,16">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="0.65*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/><ColumnDefinition Width="12"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+      <Border Style="{StaticResource Card}"><StackPanel><TextBlock Text="DETECTED INCIDENTS" Style="{StaticResource Muted}" FontSize="11"/><TextBlock Text="{Binding IncidentCount}" FontSize="28" FontWeight="SemiBold" Margin="0,7,0,0"/></StackPanel></Border>
+      <Border Grid.Column="2" Style="{StaticResource Card}"><StackPanel><TextBlock Text="MOST RECENT UNEXPECTED RESTART" Style="{StaticResource Muted}" FontSize="11"/><TextBlock Text="{Binding LastRestart}" FontSize="19" FontWeight="SemiBold" Margin="0,12,0,0"/></StackPanel></Border>
+      <Border Grid.Column="4" Style="{StaticResource Card}"><StackPanel><TextBlock Text="MOST FREQUENT APPLICATION FAILURE" Style="{StaticResource Muted}" FontSize="11"/><TextBlock Text="{Binding FrequentApp}" FontSize="19" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" TextWrapping="NoWrap" ToolTip="{Binding FrequentApp}" Margin="0,12,0,0"/></StackPanel></Border>
+    </Grid>
+    <Grid Grid.Row="2" Margin="0,0,0,18">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+      <StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding LastScan}" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Status}" Margin="0,4,16,0" AutomationProperties.LiveSetting="Polite"/><ProgressBar IsIndeterminate="True" Height="3" Margin="0,8,20,0" Visibility="{Binding IsBusy, Converter={StaticResource BooleanVisibility}}"/></StackPanel>
+      <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+        <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="0,0,14,0"/>
+        <StackPanel Margin="0,0,12,0"><Label Content="Scan days" Target="{Binding ElementName=Duration}" Padding="0,0,0,4" Foreground="{DynamicResource MutedBrush}" FontSize="12"/><ComboBox x:Name="Duration" Width="94" ItemsSource="{Binding Durations}" SelectedItem="{Binding Days}" IsEnabled="{Binding IsIdle}" AutomationProperties.Name="Scan duration in days"/></StackPanel>
+        <StackPanel><Label Content="Theme" Target="{Binding ElementName=Theme}" Padding="0,0,0,4" Foreground="{DynamicResource MutedBrush}" FontSize="12"/><ComboBox x:Name="Theme" Width="94" ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" AutomationProperties.Name="Theme"/></StackPanel>
+      </StackPanel>
+    </Grid>
+    <Grid Grid.Row="3">
+      <Grid.ColumnDefinitions><ColumnDefinition Width="0.85*" MinWidth="280"/><ColumnDefinition Width="18"/><ColumnDefinition Width="1.3*" MinWidth="400"/></Grid.ColumnDefinitions>
+      <Grid>
+        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+        <TextBlock Text="Incident timeline" FontSize="21" FontWeight="SemiBold" Margin="0,0,0,12"/>
+        <TextBox Grid.Row="1" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged, Delay=200}" AutomationProperties.Name="Search incidents" ToolTip="Search application, explanation, provider or event ID" Margin="0,0,0,10"/>
+        <ComboBox Grid.Row="2" ItemsSource="{Binding Categories}" SelectedItem="{Binding Category}" AutomationProperties.Name="Filter incident category" Margin="0,0,0,12"/>
+        <Grid Grid.Row="3"><ListBox ItemsSource="{Binding Incidents}" SelectedItem="{Binding Selected}" AutomationProperties.Name="Incident timeline"><ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" MaxHeight="44" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Subtitle}" Style="{StaticResource Muted}" FontSize="12" Margin="0,8,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate></ListBox><TextBlock Text="{Binding EmptyMessage}" Style="{StaticResource Muted}" Margin="14,18" IsHitTestVisible="False"/></Grid>
+      </Grid>
+      <Border Grid.Column="2" Style="{StaticResource Card}" Padding="24">
+        <Grid><TextBlock Text="Choose an incident to see the evidence, possible explanations and safe next steps." VerticalAlignment="Center" HorizontalAlignment="Center" MaxWidth="340"><TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource Muted}"><Setter Property="Visibility" Value="Visible"/><Style.Triggers><DataTrigger Binding="{Binding HasSelection}" Value="True"><Setter Property="Visibility" Value="Collapsed"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+          <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Visibility="{Binding HasSelection, Converter={StaticResource BooleanVisibility}}">
+            <StackPanel Margin="0,0,12,0">
+              <TextBlock Text="{Binding Selected.Title}" FontSize="24" FontWeight="SemiBold"/><TextBlock Text="{Binding Selected.Subtitle}" Style="{StaticResource Muted}" Margin="0,8,0,16"/>
+              <WrapPanel Margin="0,0,0,24"><Button Content="Copy redacted summary" Command="{Binding CopyCommand}" Margin="0,0,8,8"/><Button Content="Event Viewer" Command="{Binding EventViewerCommand}" Margin="0,0,0,8"/></WrapPanel>
+              <TextBlock Text="What Windows recorded" Style="{StaticResource SectionTitle}"/>
+              <TextBlock Text="Local evidence may contain private information. Exports omit raw payloads." Style="{StaticResource Muted}" FontSize="12" Margin="0,0,0,10"/>
+              <TextBox Text="{Binding Selected.Recorded, Mode=OneWay}" IsReadOnly="True" TextWrapping="Wrap" MaxHeight="230" VerticalScrollBarVisibility="Auto" FontFamily="Consolas" FontSize="12" BorderThickness="0" Padding="0" AutomationProperties.Name="Original event evidence"/>
+              <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,22"/>
+              <TextBlock Text="What it could mean" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding Selected.Explanation}" LineHeight="23"/>
+              <Border Height="1" Background="{DynamicResource BorderBrush}" Margin="0,22"/>
+              <TextBlock Text="What to try next" Style="{StaticResource SectionTitle}"/><TextBlock Text="{Binding Selected.NextSteps}" LineHeight="23"/>
+              <Button Content="Open Reliability Monitor" Command="{Binding ReliabilityCommand}" HorizontalAlignment="Left" Margin="0,18,0,0"/>
+            </StackPanel>
+          </ScrollViewer>
+        </Grid>
+      </Border>
+    </Grid>
+    <StackPanel Grid.Row="4" Margin="0,16,0,0">
+      <TextBlock Text="{Binding Limitations}" Style="{StaticResource Muted}" FontSize="12" MaxHeight="90"/>
+      <Button Content="Reopen as administrator (optional — Windows will ask)" Command="{Binding ElevateCommand}" Visibility="{Binding HasAccessDenied, Converter={StaticResource BooleanVisibility}}" HorizontalAlignment="Left" Margin="0,8,0,0"/>
+      <DockPanel Margin="0,10,0,0"><TextBlock Text="GOODWIN LABS · LogLens 0.1.0 · Diagnostic guidance, never automatic repair" Style="{StaticResource Muted}" FontSize="11" VerticalAlignment="Center"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="GitHub" Command="{Binding RepositoryCommand}" Padding="10,4" MinHeight="28" Margin="12,0,6,0" FontSize="11"/><Button Content="Report an issue" Command="{Binding IssuesCommand}" Padding="10,4" MinHeight="28" Margin="0,0,6,0" FontSize="11"/><Button Content="Privacy" Command="{Binding PrivacyCommand}" Padding="10,4" MinHeight="28" FontSize="11"/></StackPanel></DockPanel>
+    </StackPanel>
+  </Grid>
+</Window>

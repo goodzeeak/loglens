@@ -1,0 +1,4 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup><TargetFramework>net10.0-windows</TargetFramework></PropertyGroup>
+  <ItemGroup><PackageReference Include="System.Diagnostics.EventLog" Version="10.0.0" /><ProjectReference Include="../LogLens.Core/LogLens.Core.csproj" /></ItemGroup>
+</Project>

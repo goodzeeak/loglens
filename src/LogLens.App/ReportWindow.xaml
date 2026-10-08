@@ -1,0 +1,7 @@
+<Window x:Class="LogLens.App.ReportWindow" xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" Title="Review before sharing — LogLens" Style="{StaticResource {x:Type Window}}" Width="900" Height="760" MinWidth="640" MinHeight="500" WindowStartupLocation="CenterOwner">
+  <Grid Margin="24"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
+    <StackPanel Margin="0,0,0,18"><TextBlock Text="Review your report" FontSize="26" FontWeight="SemiBold"/><TextBlock Text="Redaction is on. Read through this content before saving or sharing; unusual identifiers can remain. The HTML export contains the same text with browser formatting." Style="{StaticResource Muted}" Margin="0,8,0,0"/></StackPanel>
+    <TextBox x:Name="PreviewText" Grid.Row="1" IsReadOnly="True" TextWrapping="Wrap" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" FontSize="14" Padding="20" AutomationProperties.Name="Redacted report content"/>
+    <DockPanel Grid.Row="2" Margin="0,18,0,0"><TextBlock x:Name="ExportStatus" Text="Nothing has been saved or uploaded." Style="{StaticResource Muted}" VerticalAlignment="Center"/><StackPanel Orientation="Horizontal" HorizontalAlignment="Right"><Button Content="Close" IsCancel="True" Margin="12,0"/><Button Content="Save HTML report…" Click="SaveClick" Style="{StaticResource PrimaryButton}"/></StackPanel></DockPanel>
+  </Grid>
+</Window>
