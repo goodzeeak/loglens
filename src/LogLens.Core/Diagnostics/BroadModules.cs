@@ -45,7 +45,7 @@ internal static class BroadModules
             "A driver startup, compatibility or device-availability issue could be involved.",
             "This warning does not establish a broken device or a lasting failure. Check whether the device subsequently works.",
             [new("device-status", "Open Device Manager and check whether the affected device currently works and shows an error. Record the error code before changing drivers."),
-             new("device-driver", "If the device remains affected, compare recent driver changes with the PC or device vendor's supported driver guidance.")], ["FailureName", "DriverName", "Status"]) ]);
+             new("device-driver", "If the device remains affected, compare recent driver changes with the PC or device vendor's supported driver guidance.")], ["FailureName", "Status"]) ]);
         yield return new DeclaredModule(IncidentCategory.Network,
         [new("System", "Microsoft-Windows-NDIS", 10400, "adapter-reset", "Network adapter reset began",
             "Windows recorded the start of a network-interface reset, with a temporary connectivity disruption expected.",

@@ -9,7 +9,7 @@ The starting commit was 1f6c72afa0f3d303980ffe4b4c8ed0fddea4bce2. Its 98 tests a
 | Check | Result |
 | --- | --- |
 | Mandatory semantic fixtures | **56 passed, 0 failed** (36 preserved + 20 new) |
-| Complete xUnit suite | **137 passed, 0 failed, 0 skipped** |
+| Complete xUnit suite | **138 passed, 0 failed, 0 skipped** |
 | Release build and enabled .NET/xUnit analyzers, warnings as errors | Passed |
 | Native read-only EventLogReader integration | Passed locally on Windows 11 x64 build 26200; System/Application/DHCP Admin paths exercised |
 | WPF STA workflow | Passed: scan/search/filter/copy/preview/themes/cancellation; investigation save and next-step transition; export/feedback window construction |

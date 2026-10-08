@@ -99,4 +99,13 @@ public sealed class InvestigationTests
         Assert.DoesNotContain("private.internal", report.PlainText); Assert.DoesNotContain("secret-address", report.PlainText);
         Assert.DoesNotContain("user@example.com", report.PlainText); Assert.DoesNotContain("<script>", report.ToHtml()); Assert.Contains("dns-timeout", report.PlainText);
     }
+    [Fact] public void DeviceInstanceIdentifiersStayLocal()
+    {
+        var e = AccuracyFixtures.E("Microsoft-Windows-Kernel-PnP", 219, fields: [("DriverName", "USB\\PRIVATE-SERIAL"), ("FailureName", "ExampleDriver")]);
+        var incident = new DiagnosticEngine().Analyze([e], AccuracyFixtures.Period).Single();
+        Assert.Contains("PRIVATE-SERIAL", incident.Recorded);
+        var scan = new ScanResult(AccuracyFixtures.Period, AccuracyFixtures.T, [incident], [], 1);
+        var report = new ReportBuilder(new()).Feedback(scan, incident, "0.1.0", "Windows", "Unexpected warning");
+        Assert.DoesNotContain("PRIVATE-SERIAL", report.PlainText); Assert.Contains("ExampleDriver", report.PlainText);
+    }
 }
