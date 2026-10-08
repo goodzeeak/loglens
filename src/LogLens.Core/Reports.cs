@@ -46,7 +46,7 @@ public sealed record DiagnosticReport(IReadOnlyList<ReportBlock> Blocks)
 }
 public sealed class ReportBuilder(ReportRedactor redactor)
 {
-    public const string Limitations = "Windows logs may be incomplete, delayed, inaccessible or absent. Record times are not necessarily failure times. Nearby events do not prove causation. Two-minute restart grouping is heuristic; separate restarts may be ambiguous. WHEA binary data and crash dumps are not decoded. No finding establishes a defective component. No detected incidents does not prove the PC is healthy.";
+    public const string Limitations = "Windows logs may be incomplete, delayed, inaccessible or absent. Record times are not necessarily failure times. Nearby events do not prove causation. Two-minute restart grouping is heuristic; separate restarts may be ambiguous. WHEA decoding covers validated CPER headers, section types and generic-processor fields; vendor-specific MCA registers and crash dumps are not decoded. Recorded error categories do not necessarily identify a defective physical component. No detected incidents does not prove the PC is healthy.";
     public const string PrivacyNotice = "Windows logs may contain sensitive information. This report omits raw messages, raw XML, computer/UserID fields and arbitrary event payloads. Known identities, paths, email and IP addresses are redacted where practical. Redaction is not perfect: application names, timestamps and unusual identifiers can still be identifying. Review every section before sharing.";
     public DiagnosticReport Build(ScanResult scan, string version, string osVersion, DateTimeOffset created)
     {
@@ -55,11 +55,11 @@ public sealed class ReportBuilder(ReportRedactor redactor)
         Add("Report details", $"LogLens {version} · Goodwin Labs\nCreated: {created:O}\nWindows: {osVersion}\nScan period: {scan.Period.Start:O} to {scan.Period.End:O}\nCompleted: {scan.CompletedAt:O}");
         Add("Privacy — review before sharing", PrivacyNotice);
         Add("Incident summary", $"{scan.Incidents.Count} incidents from {scan.EventCount} relevant records. {(scan.Issues.Count > 0 ? "Partial results: collection limitations are listed below." : "Selected System and Application records were scanned within the configured limits.")}",
-            string.Join("\n", scan.Incidents.GroupBy(i => i.Category).Select(g => $"{g.Key}: {g.Count()}")));
+            string.Join("\n", scan.Incidents.GroupBy(i => i.CategoryLabel).Select(g => $"{g.Key}: {g.Count()}")));
         foreach (var issue in scan.Issues) Add($"Collection limitation: {issue.Channel}", issue.Message);
         foreach (var incident in scan.Incidents)
         {
-            Add($"{incident.Time:O} · {incident.Title}", $"Category: {incident.Category} · Severity: {incident.Severity}");
+            Add($"{incident.Time:O} · {incident.Title}", $"Category: {incident.CategoryLabel} · Severity: {incident.Severity}");
             Add("What Windows recorded", incident.Evidence.Select(Evidence).ToArray());
             if (incident.Context.Count > 0) Add("Nearby context — no causal relationship established", incident.Context.Select(Evidence).ToArray());
             Add("What it could mean", incident.Findings.Select(f => $"{Incident.Label(f.Classification)}: {f.Text}").ToArray());

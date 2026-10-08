@@ -20,6 +20,10 @@ try {
     }
     $runtime = Get-Content -LiteralPath (Join-Path $packageRoot 'LogLens.runtimeconfig.json') -Raw | ConvertFrom-Json
     if (-not $runtime.runtimeOptions.includedFrameworks) { throw 'Portable package must include the .NET runtime.' }
+    if (-not ($runtime.runtimeOptions.includedFrameworks.name -contains 'Microsoft.WindowsDesktop.App')) { throw 'Missing self-contained Windows desktop framework.' }
+    $executableBytes = [IO.File]::ReadAllBytes((Join-Path $packageRoot 'LogLens.exe'))
+    $peOffset = [BitConverter]::ToInt32($executableBytes, 0x3c)
+    if ([BitConverter]::ToUInt16($executableBytes, $peOffset + 4) -ne 0x8664) { throw 'Portable executable must be x64.' }
     $zip = Join-Path $artifactRoot ('LogLens-' + $Version + '-win-x64.zip')
     Compress-Archive -LiteralPath $packageRoot -DestinationPath $zip -Force
     $hash = (Get-FileHash -LiteralPath $zip -Algorithm SHA256).Hash.ToLowerInvariant()

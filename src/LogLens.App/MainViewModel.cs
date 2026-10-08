@@ -50,7 +50,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<Incident> Incidents { get; } = [];
     public int[] Durations { get; } = [1, 7, 30];
     public string[] Themes { get; } = ["Dark", "Light"];
-    public string[] Categories { get; } = ["All incidents", "UnexpectedRestart", "ApplicationCrash", "Hardware", "Storage", "Display"];
+    public string[] Categories { get; } = ["All incidents", "Unexpected restart", "Application failure", "Hardware", "Storage", "Display"];
     public AsyncCommand ScanCommand { get; }
     public AsyncCommand PreviewCommand { get; }
     public RelayCommand CancelCommand { get; }
@@ -108,7 +108,7 @@ public sealed class MainViewModel : INotifyPropertyChanged, IDisposable
     {
         var oldId = Selected?.Id; Incidents.Clear();
         if (result != null)
-            foreach (var incident in result.Incidents.Where(i => (Category == "All incidents" || i.Category.ToString() == Category) &&
+            foreach (var incident in result.Incidents.Where(i => (Category == "All incidents" || i.CategoryLabel == Category) &&
                 (Search.Length == 0 || i.Title.Contains(Search, StringComparison.OrdinalIgnoreCase) || i.Explanation.Contains(Search, StringComparison.OrdinalIgnoreCase) || i.Evidence.Any(e => e.Provider.Contains(Search, StringComparison.OrdinalIgnoreCase) || e.EventId.ToString().Contains(Search, StringComparison.OrdinalIgnoreCase))))) Incidents.Add(incident);
         Selected = Incidents.FirstOrDefault(i => i.Id == oldId) ?? Incidents.FirstOrDefault(); Notify(nameof(EmptyMessage));
     }

@@ -16,7 +16,12 @@ public sealed record Incident(string Id, IncidentCategory Category, Severity Sev
     IReadOnlyList<Finding> Findings, IReadOnlyList<Recommendation> Recommendations, string Application = "")
 {
     public string LocalTime => Time.ToLocalTime().ToString("g");
-    public string Subtitle => $"{LocalTime} · {Category} · {Severity} · {Evidence.Count} records";
+    public string CategoryLabel => Category switch
+    {
+        IncidentCategory.UnexpectedRestart => "Unexpected restart", IncidentCategory.ApplicationCrash => "Application failure",
+        IncidentCategory.Hardware => "Hardware", IncidentCategory.Storage => "Storage", _ => "Display"
+    };
+    public string Subtitle => $"{LocalTime} · {CategoryLabel} · {Severity} · {Evidence.Count} {(Evidence.Count == 1 ? "record" : "records")}";
     public string Explanation => string.Join("\n\n", Findings.Select(f => $"{Label(f.Classification)}: {f.Text}"));
     public string NextSteps => string.Join("\n\n", Recommendations.Select((r, i) => $"{i + 1}. {r.Text}"));
     public string Recorded => string.Join("\n\n", Evidence.Select(Describe)) +
@@ -25,7 +30,7 @@ public sealed record Incident(string Id, IncidentCategory Category, Severity Sev
     { EvidenceClass.ConfirmedObservation => "Confirmed observation", EvidenceClass.PossibleCause => "Possible cause", _ => "Insufficient evidence" };
     private static string Describe(DiagnosticEvent e) => $"{e.Time.ToLocalTime():O}\n{e.Reference}\n" +
         string.Join("; ", e.Fields.Where(p => p.Key is not ("RawData" or "Binary")).Take(32).Select(p => $"{p.Key}: {p.Value}")) +
-        (e.Fields.ContainsKey("RawData") ? "\nBinary WHEA data is available in the original Event Viewer record; LogLens does not decode it." : "");
+        (e.Fields.ContainsKey("RawData") ? "\nRaw WHEA data is retained in memory and available in Event Viewer. Supported validated fields are explained below; raw binary is omitted from export." : "");
     public override string ToString() => $"{Title} · {Subtitle}";
 }
 public sealed record ScanPeriod(DateTimeOffset Start, DateTimeOffset End)

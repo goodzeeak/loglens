@@ -19,7 +19,7 @@
       <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
       <StackPanel VerticalAlignment="Center"><TextBlock Text="{Binding LastScan}" Style="{StaticResource Muted}" FontSize="12"/><TextBlock Text="{Binding Status}" Margin="0,4,16,0" AutomationProperties.LiveSetting="Polite"/><ProgressBar IsIndeterminate="True" Height="3" Margin="0,8,20,0" Visibility="{Binding IsBusy, Converter={StaticResource BooleanVisibility}}"/></StackPanel>
       <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-        <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="0,0,14,0"/>
+        <Button Content="Cancel" Command="{Binding CancelCommand}" Margin="0,0,14,0" Height="40" MinHeight="40" VerticalAlignment="Bottom"/>
         <StackPanel Margin="0,0,12,0"><Label Content="Scan days" Target="{Binding ElementName=Duration}" Padding="0,0,0,4" Foreground="{DynamicResource MutedBrush}" FontSize="12"/><ComboBox x:Name="Duration" Width="94" ItemsSource="{Binding Durations}" SelectedItem="{Binding Days}" IsEnabled="{Binding IsIdle}" AutomationProperties.Name="Scan duration in days"/></StackPanel>
         <StackPanel><Label Content="Theme" Target="{Binding ElementName=Theme}" Padding="0,0,0,4" Foreground="{DynamicResource MutedBrush}" FontSize="12"/><ComboBox x:Name="Theme" Width="94" ItemsSource="{Binding Themes}" SelectedItem="{Binding Theme}" AutomationProperties.Name="Theme"/></StackPanel>
       </StackPanel>
@@ -29,7 +29,8 @@
       <Grid>
         <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
         <TextBlock Text="Incident timeline" FontSize="21" FontWeight="SemiBold" Margin="0,0,0,12"/>
-        <TextBox Grid.Row="1" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged, Delay=200}" AutomationProperties.Name="Search incidents" ToolTip="Search application, explanation, provider or event ID" Margin="0,0,0,10"/>
+        <TextBox Grid.Row="1" Height="40" Text="{Binding Search, UpdateSourceTrigger=PropertyChanged, Delay=200}" AutomationProperties.Name="Search incidents" ToolTip="Search application, explanation, provider or event ID" Margin="0,0,0,10"/>
+        <TextBlock Grid.Row="1" Text="Search application, event ID or keyword" Margin="12,0,12,10" VerticalAlignment="Center" IsHitTestVisible="False" FontSize="12"><TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource Muted}"><Setter Property="Visibility" Value="Collapsed"/><Style.Triggers><DataTrigger Binding="{Binding Search}" Value=""><Setter Property="Visibility" Value="Visible"/></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
         <ComboBox Grid.Row="2" ItemsSource="{Binding Categories}" SelectedItem="{Binding Category}" AutomationProperties.Name="Filter incident category" Margin="0,0,0,12"/>
         <Grid Grid.Row="3"><ListBox ItemsSource="{Binding Incidents}" SelectedItem="{Binding Selected}" AutomationProperties.Name="Incident timeline"><ListBox.ItemTemplate><DataTemplate><StackPanel><TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="15" MaxHeight="44" TextTrimming="CharacterEllipsis"/><TextBlock Text="{Binding Subtitle}" Style="{StaticResource Muted}" FontSize="12" Margin="0,8,0,0"/></StackPanel></DataTemplate></ListBox.ItemTemplate></ListBox><TextBlock Text="{Binding EmptyMessage}" Style="{StaticResource Muted}" Margin="14,18" IsHitTestVisible="False"/></Grid>
       </Grid>

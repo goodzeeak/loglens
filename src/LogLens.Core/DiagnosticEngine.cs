@@ -67,6 +67,8 @@ public sealed class DiagnosticEngine
                     Maybe("stop-cause", "A driver or hardware stability problem could be involved; dump analysis is needed to investigate.");
                     Step("dump", "If a crash dump is available in Windows\\Minidump or MEMORY.DMP, inspect it with Microsoft WinDbg or ask a trusted technician. Dumps can contain private data.");
                 }
+                if (evidence.Any(e => SpecificFindings.StopCode(e) == 0x9F)) Step("power-driver", "Focus on drivers involved in sleep, wake or device power changes. Compare recent chipset, network, USB or storage driver changes; a dump can identify the stalled power request.");
+                if (evidence.Any(e => SpecificFindings.StopCode(e) == 0x116)) Step("graphics", "Focus on the graphics driver and GPU workload. Compare driver changes, test stock GPU settings and inspect the dump for the named display driver.");
                 context.AddRange(all.Where(e => EventRules.Category(e) is IncidentCategory.Hardware or IncidentCategory.Storage or IncidentCategory.Display &&
                     e.Time <= first.Time && first.Time - e.Time <= TimeSpan.FromMinutes(5)).TakeLast(20));
                 if (context.Count > 0) Fact("nearby", "Hardware, storage or display records were logged nearby and are shown as context. Timing alone does not establish a cause or prove they occurred before the actual shutdown.");
@@ -87,11 +89,34 @@ public sealed class DiagnosticEngine
                 break;
             case IncidentCategory.Hardware:
                 title = "Hardware error report";
-                Fact("whea", "Windows Hardware Error Architecture (WHEA) recorded a hardware error report. Corrected reports do not necessarily imply a crash.");
-                Maybe("hardware-cause", "Hardware, firmware, voltage or tuning instability could be involved. The affected component is not proven defective.");
-                Unknown("LogLens does not decode WHEA binary error records or establish a defective component.");
-                Step("stock", "If you use CPU, GPU or RAM overclocks or undervolts, return them to stock settings for controlled testing using vendor instructions.");
-                Step("memory", "If memory instability is suspected, save your work and run Windows Memory Diagnostic. A passing test does not rule out all memory faults.");
+                severity = evidence.Any(e => e.Level == 1) ? Severity.Critical : evidence.Any(e => e.Level == 2) ? Severity.Error : Severity.Warning;
+                var decoded = evidence.Select(e => CperDecoder.Decode(e.Field("RawData"))).FirstOrDefault(c => c != null);
+                if (decoded != null)
+                {
+                    Fact("cper-severity", $"The WHEA/CPER record classifies this hardware error as {decoded.Severity.ToLowerInvariant()}. This is the severity recorded by the hardware/firmware reporting path.");
+                    Fact("cper-sections", $"The record contains: {string.Join(", ", decoded.Sections)}. A section's presence alone does not identify a failed replaceable part.");
+                    severity = decoded.Severity == "Fatal" ? Severity.Critical : decoded.Severity == "Recoverable" ? Severity.Error : Severity.Warning;
+                    title = $"{decoded.Severity} hardware error report";
+                }
+                if (decoded?.Processor is { } processor)
+                {
+                    title = $"{processor.Severity} processor {processor.Kind} error";
+                    Fact("processor-error", $"The validated processor section reports a {processor.Kind} error ({processor.Severity.ToLowerInvariant()})." +
+                        (processor.ProcessorId is { } processorId ? $" Logical processor/APIC identifier: {processorId}." : "") +
+                        (processor.CacheLevel is { } level ? $" Reported hierarchy level: {level} (as encoded by the platform)." : ""));
+                    Maybe("processor-cause", "The investigation can focus on processor/cache stability and its supporting firmware, voltage and tuning. The error category is established; the failing physical part is not.");
+                    Unknown("The record does not distinguish CPU silicon failure from voltage/tuning, firmware or supporting-board problems. It does not by itself establish that this record and a nearby restart describe the same failure.");
+                    Step("cpu-stock", "First, if CPU overclocking, undervolting or Curve Optimizer tuning is enabled, test at vendor stock settings. Record whether the same processor error recurs before changing anything else.");
+                    Step("firmware", "Check the motherboard/PC vendor's BIOS and chipset release notes for processor-stability fixes. Follow the vendor's instructions if you choose an update; do not change settings blindly.");
+                }
+                else
+                {
+                    Fact("whea", "Windows Hardware Error Architecture (WHEA) recorded a hardware error report. Corrected reports do not necessarily imply a crash.");
+                    Maybe("hardware-cause", "Hardware, firmware, voltage or tuning instability could be involved. The affected component is not proven defective.");
+                    Unknown("No supported, validated processor-error details are available in this record. Vendor-specific MCA details and crash dumps are not decoded.");
+                    Step("stock", "If you use CPU, GPU or RAM overclocks or undervolts, return them to stock settings for controlled testing using vendor instructions.");
+                    Step("memory", "If memory instability is suspected, save your work and run Windows Memory Diagnostic. A passing test does not rule out all memory faults.");
+                }
                 Step("temperature", "Review hardware temperatures and vendor firmware guidance, especially if these reports recur.");
                 break;
             case IncidentCategory.Storage:
@@ -111,6 +136,7 @@ public sealed class DiagnosticEngine
                 Step("stock", "If graphics tuning or an overclock is active, test at stock settings and review GPU temperatures.");
                 break;
         }
+        findings.InsertRange(0, SpecificFindings.For(evidence));
         var id = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(string.Join("|", evidence.Select(Key)))))[..16];
         return new(id, category, severity, first.Time, title, evidence.ToArray(), context, findings, steps, app);
     }

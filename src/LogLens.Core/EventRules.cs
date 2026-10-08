@@ -8,7 +8,8 @@ public static class EventRules
         if (e.Channel.Equals("System", StringComparison.OrdinalIgnoreCase))
         {
             if (Is(e, "Microsoft-Windows-Kernel-Power", 41) || Is(e, "EventLog", 6008) || IsBugCheck(e)) return IncidentCategory.UnexpectedRestart;
-            if (e.Provider.Equals("Microsoft-Windows-WHEA-Logger", StringComparison.OrdinalIgnoreCase) && new[] { 1, 17, 18, 19, 20, 46, 47 }.Contains(e.EventId)) return IncidentCategory.Hardware;
+            if (e.Provider.Equals("Microsoft-Windows-WHEA-Logger", StringComparison.OrdinalIgnoreCase) && new[] { 1, 17, 18, 19, 20, 46, 47 }.Contains(e.EventId))
+                return CperDecoder.Decode(e.Field("RawData"))?.Severity == "Informational" ? null : IncidentCategory.Hardware;
             if ((e.Provider.Equals("disk", StringComparison.OrdinalIgnoreCase) && new[] { 7, 11, 15, 51, 153, 157 }.Contains(e.EventId)) ||
                 (new[] { "storahci", "stornvme", "iaStorA", "iaStorAC" }.Contains(e.Provider, StringComparer.OrdinalIgnoreCase) && e.EventId == 129) ||
                 (new[] { "Ntfs", "Microsoft-Windows-Ntfs" }.Contains(e.Provider, StringComparer.OrdinalIgnoreCase) &&

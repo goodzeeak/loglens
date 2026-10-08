@@ -11,6 +11,7 @@ public partial class MainWindow : Window, IDesktopActions
     public MainWindow(AppSettings settings)
     {
         InitializeComponent();
+        WindowTheme.Attach(this);
         DataContext = new MainViewModel(new(new WindowsEventCollector(), new()), this, settings);
         Closed += (_, _) => ((MainViewModel)DataContext).Dispose();
     }

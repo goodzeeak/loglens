@@ -5,6 +5,7 @@ namespace LogLens.App;
 
 public partial class App : Application
 {
+    public static string CurrentTheme { get; private set; } = "Dark";
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
@@ -13,6 +14,7 @@ public partial class App : Application
     }
     public static void ApplyTheme(string theme)
     {
+        CurrentTheme = theme;
         var dark = theme == "Dark";
         var values = new Dictionary<string, string>
         {
@@ -29,5 +31,6 @@ public partial class App : Application
             Current.Resources["AccentBrush"] = SystemColors.HighlightBrush; Current.Resources["AccentTextBrush"] = SystemColors.HighlightTextBrush;
             Current.Resources["SelectionBrush"] = SystemColors.WindowBrush; Current.Resources["BorderBrush"] = SystemColors.WindowTextBrush;
         }
+        foreach (Window window in Current.Windows) WindowTheme.Apply(window);
     }
 }

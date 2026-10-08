@@ -14,7 +14,7 @@ The dashboard and report show collection limitations. If access is denied, you m
 
 ## Why no definitive cause or percentage?
 
-Windows records often describe symptoms. Event 41 means an unclean shutdown, not a defective PSU. WHEA reports can reflect corrected errors and firmware/tuning interactions; a recorded component is not automatically faulty. A faulting module is where the application failure surfaced. Nearby events do not establish causation. LogLens does not invent confidence percentages or inspect crash dumps.
+Windows records often describe symptoms. Event 41 means an unclean shutdown, not a defective PSU. WHEA reports can reflect corrected errors and firmware/tuning interactions; a recorded component is not automatically faulty. A faulting module is where the application failure surfaced. Nearby events do not establish causation. LogLens decodes validated CPER processor-error types, named Stop codes, application exception codes and specific storage errors. It does not invent confidence percentages or inspect crash dumps.
 
 ## Duplicate or separated incidents
 

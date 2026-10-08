@@ -45,6 +45,14 @@ public sealed class CollectionTests
         var result = await new WindowsEventCollector(new FakeFactory(Enumerable.Repeat(Xml, 5001).ToArray())).CollectAsync(AccuracyFixtures.Period, null, default);
         Assert.Equal(5000, result.Events.Count); Assert.Equal(2, result.Issues.Count(i => i.Code == "limit"));
     }
+    [Fact] public async Task TotalPayloadBudgetBoundsMemory()
+    {
+        var fields = string.Join("", Enumerable.Range(0, 50).Select(i => $"<Data Name='Large{i}'>{new string('x', 2048)}</Data>"));
+        var xml = Xml.Replace("</EventData>", fields + "</EventData>");
+        var result = await new WindowsEventCollector(new FakeFactory(Enumerable.Repeat(xml, 200).ToArray())).CollectAsync(AccuracyFixtures.Period, null, default);
+        Assert.Contains(result.Issues, i => i.Code == "memory-limit");
+        Assert.InRange(result.Events.Count, 1, 100);
+    }
     [Fact] public async Task CancellationStopsReaderLoop()
     {
         using var cts = new CancellationTokenSource();

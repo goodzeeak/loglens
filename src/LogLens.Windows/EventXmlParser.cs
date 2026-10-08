@@ -28,7 +28,8 @@ public static class EventXmlParser
         foreach (var data in (root.Element(ns + "EventData")?.Elements(ns + "Data") ?? []).Take(64))
         {
             var name = data.Attribute("Name")?.Value;
-            fields.TryAdd(Limit(string.IsNullOrWhiteSpace(name) ? $"Data{index}" : name, 128), Limit(data.Value, 2048));
+            var maximum = name == "RawData" && provider == "Microsoft-Windows-WHEA-Logger" ? CperDecoder.MaximumHexLength : 2048;
+            fields.TryAdd(Limit(string.IsNullOrWhiteSpace(name) ? $"Data{index}" : name, 128), Limit(data.Value, maximum));
             index++;
         }
         // Do not copy Computer, Security/UserID, raw XML or localized messages into the model.

@@ -26,6 +26,7 @@ public sealed class WindowsEventCollector(IRecordReaderFactory? factory = null) 
 {
     private readonly IRecordReaderFactory factory = factory ?? new NativeRecordReaderFactory();
     public const int MaximumRecordsPerChannel = 5000;
+    public const int MaximumRetainedCharacters = 8 * 1024 * 1024;
     public Task<CollectionResult> CollectAsync(ScanPeriod period, IProgress<string>? progress, CancellationToken cancellationToken)
     {
         period.Validate();
@@ -42,7 +43,7 @@ public sealed class WindowsEventCollector(IRecordReaderFactory? factory = null) 
     }
     private CollectionResult Collect(ScanPeriod period, IProgress<string>? progress, CancellationToken token)
     {
-        var events = new List<DiagnosticEvent>(); var issues = new List<CollectionIssue>();
+        var events = new List<DiagnosticEvent>(); var issues = new List<CollectionIssue>(); var retained = 0;
         foreach (var channel in new[] { "System", "Application" })
         {
             token.ThrowIfCancellationRequested(); progress?.Report($"Reading {channel} records…");
@@ -63,7 +64,16 @@ public sealed class WindowsEventCollector(IRecordReaderFactory? factory = null) 
                     try
                     {
                         var item = EventXmlParser.Parse(xml);
-                        if (item.Channel == channel && item.Time >= period.Start && item.Time <= period.End && EventRules.Category(item) != null) events.Add(item);
+                        if (item.Channel == channel && item.Time >= period.Start && item.Time <= period.End && EventRules.Category(item) != null)
+                        {
+                            var characters = item.Fields.Sum(p => p.Key.Length + p.Value.Length) + item.Provider.Length + item.Channel.Length;
+                            if (retained + characters > MaximumRetainedCharacters)
+                            {
+                                issues.Add(new(channel, "memory-limit", "The retained-data safety limit was reached. This scan is partial; choose a shorter period."));
+                                return new(events, issues);
+                            }
+                            retained += characters; events.Add(item);
+                        }
                     }
                     catch (XmlException) { malformed++; }
                     if (count % 100 == 0) progress?.Report($"Reading {channel}: {count + 1:N0} candidate records…");

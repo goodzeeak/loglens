@@ -11,7 +11,7 @@ public partial class ReportWindow : Window
     private readonly DiagnosticReport report;
     public ReportWindow(DiagnosticReport report)
     {
-        InitializeComponent(); this.report = report; PreviewText.Text = report.PlainText;
+        InitializeComponent(); WindowTheme.Attach(this); this.report = report; PreviewText.Text = report.PlainText;
     }
     private async void SaveClick(object sender, RoutedEventArgs e)
     {
